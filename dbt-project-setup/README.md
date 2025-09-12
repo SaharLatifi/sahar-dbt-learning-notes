@@ -1,4 +1,4 @@
-# Setup a dbt Project (Snowflake) — with dbt-fusion (WSL installer method)
+## Setup a dbt Project (Snowflake) — with dbt-fusion (WSL installer method)
 
 This guide shows how to install **dbt-fusion** in WSL using the official installer script, and connect it to Snowflake.
 
