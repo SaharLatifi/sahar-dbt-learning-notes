@@ -28,11 +28,10 @@ curl -fsSL https://public.cdn.getdbt.com/fs/install/install.sh | sh -s -- --upda
 This downloads and installs the latest dbt-fusion binary into your WSL environment.
 
 Check version:
-dbt-fusion --version
+dbtf --version
 
 
 7. Initialize a new project
-mkdir ~/projects && cd ~/projects
 dbtf init my_dbt_project
 cd my_dbt_project
 
