@@ -8,12 +8,12 @@ Most dbt tutorials, packages, and scripts assume a Linux/Mac environment.
 
 Dependency management (like adapters, Python tools) is cleaner and less error-prone in Linux.
 
-## 1) Create Snowflake trial account
+# 1. Create Snowflake trial account
 https://signup.snowflake.com/?trial=student
 
 
 
-## 2) Install WSL
+# 2. Install WSL
 Install WSL - follow the instruction here
 https://learn.microsoft.com/en-us/windows/wsl/install
 
