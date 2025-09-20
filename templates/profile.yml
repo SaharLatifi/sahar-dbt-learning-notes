@@ -1,0 +1,39 @@
+horrorland:
+  target: dev
+  outputs:
+    dev:
+      type: snowflake
+      schema: DEV_SCHEMA
+      role: ACCOUNTADMIN
+      account: ABENVLM-LX79565
+      warehouse: COMPUTE_WH
+      threads: 16
+      password: << your password >>
+      user: << your username >>
+      database: DEV_DATABASE
+
+
+    prod:
+      type: snowflake
+      schema: PROD_SCHEMA
+      role: ACCOUNTADMIN
+      account: ABENVLM-LX79565
+      warehouse: COMPUTE_WH
+      threads: 16
+      password: << your password >>
+      user: << yPROD_DATABASE
+
+
+airbnb:
+  target: dev
+  outputs:
+    dev:
+      type: snowflake
+      threads: 16
+      account: SNQALNR-NO86410
+      user: << your username >>
+      database: AIRBNB_DEV
+      warehouse: COMPUTE_WH
+      schema: SAHAR
+      password: << your password >>
+      role: ACCOUNTADMIN
