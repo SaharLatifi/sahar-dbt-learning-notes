@@ -24,9 +24,10 @@ This is not a production project but a knowledge base + playground.
 
 ## 🛠 Templates
 Reusable starter files for YAML and Jinja.  
-- [dbt_project.yml](templates/dbt_project.yml)
-  Project metadata and project level configuration   
+When we initialize a dbt project, dbt creates two important files, dbt_project.yml and profiles.yml. dbt_project.yml contains project metadata and configuration and profiles.yml is used by dbt to connect to data warehouse.
+- [dbt_project.yml](templates/dbt_project.yml) 
 - [profile.yml](templates/profile.yml)  
+ 
 - [schema.yml](templates/schema.yml)  
 - [snapshot.yml](templates/snapshot.yml)  
 - [macro_example.sql](templates/macro_example.sql)  
