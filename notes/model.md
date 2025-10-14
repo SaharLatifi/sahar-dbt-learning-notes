@@ -1,12 +1,13 @@
 # 🟠 dbt Models — Key Concepts
 
 ## Writing Models
-- A dbt model is just a **`SELECT` statement**, usually wrapped in a **CTE**.  
+- A dbt model is just a **`SELECT` statement**, usually wrapped in a 
+**CTE**.  
 - You can extend functionality with **Jinja** (`{% if %}`, loops, macros).  
 - Models can also be written in **Python** (in supported warehouses).  
 - To see the compiled SQL sent to the warehouse:  
   `Ctrl + Shift + P → Compile model`
-
+Models can reference eachother
 ---
 
 ## ref

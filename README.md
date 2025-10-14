@@ -10,6 +10,8 @@ This is not a production project but a knowledge base + playground.
 
 ## 📚 Notes
 - [Configs](notes/configs.md)  
+- [Setup dbt project](notes/how-to-setup-dbt-proj.md)  
+- [Models](notes/model.md)  
 - [Sources](notes/sources.md)  
 - [Tests](notes/tests.md)  
 - [Snapshots](notes/snapshots.md)  
@@ -27,7 +29,6 @@ This is not a production project but a knowledge base + playground.
 When we initialize a dbt project, dbt creates two important files:    
   - [dbt_project.yml](templates/dbt_project.yml) : contains project metadata and configuration  
   - [profile.yml](templates/profile.yml) : is used by dbt to connect to data warehouse.
- 
 - [schema.yml](templates/schema.yml)  
 - [snapshot.yml](templates/snapshot.yml)  
 - [macro_example.sql](templates/macro_example.sql)  
