@@ -63,4 +63,4 @@ models:
 ```
 
 ⚠️ The **higher priority** for configs always comes from the **model `.sql` file**.  
-YAML files are strictly for **docs and testing**, not materialization or other configs.
+YML files are strictly for **docs and testing**, not materialization or other configs.

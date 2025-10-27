@@ -9,8 +9,8 @@ This is not a production project but a knowledge base + playground.
 ---
 
 ## 📚 Notes
-- [Configs](notes/configs.md)  
 - [Setup dbt project](notes/how-to-setup-dbt-proj.md)  
+- [Configs](notes/configs.md)  
 - [Models](notes/model.md)  
 - [Sources](notes/sources.md)  
 - [Tests](notes/tests.md)  
@@ -21,14 +21,16 @@ This is not a production project but a knowledge base + playground.
 - [Performance](notes/performance.md)  
 - [Best Practices](notes/best_practices.md)  
 - [CI/CD](notes/cicd.md)  
+- [📊 Data Quality Rules (Excel)](notes/data_quality_rules_master.xlsx)  
+- [🧹 Data Cleaning & Transformation Rules (Excel)](notes/Data_Cleaning_Transformation_Master_v2.xlsx)  
 
 ---
 
 ## 🛠 Templates
  
 When we initialize a dbt project, dbt creates two important files:    
-  - [dbt_project.yml](templates/dbt_project.yml) : contains project metadata and configuration  
-  - [profile.yml](templates/profile.yml) : is used by dbt to connect to data warehouse.
+- [dbt_project.yml](templates/dbt_project.yml) : contains project metadata and project level configurations  
+- [profile.yml](templates/profile.yml) : is used by dbt to connect to data warehouse.
 - [schema.yml](templates/schema.yml)  
 - [snapshot.yml](templates/snapshot.yml)  
 - [macro_example.sql](templates/macro_example.sql)  

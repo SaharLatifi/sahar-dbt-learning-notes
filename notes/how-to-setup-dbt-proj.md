@@ -40,20 +40,26 @@ This guide shows how to install **dbt-fusion** in WSL using the official install
 
    Check version:  
    ```bash
-   dbt-fusion --version
+   dbtf --version
    ```
 
 7. **Initialize a new project**  
    ```bash
    mkdir ~/projects && cd ~/projects
-   dbt-fusion init my_dbt_project
+   dbtf init my_dbt_project  -->> Config Snowflake connection
    cd my_dbt_project
    ```
 
 8. **Configure Snowflake profile**  
-   Edit your dbt profile file in WSL:  
+   To edit your dbt profile file in WSL:  
    ```bash
    nano ~/.dbt/profiles.yml
+   Or locate profile.yml first and edit the file
+   ( echo %USERPROFILE% )
+   find ~ -name profiles.yml 2>/dev/null
+   code ~/.dbt/profiles.yml
+
+
    ```
 
    Example configuration:  
@@ -70,14 +76,13 @@ This guide shows how to install **dbt-fusion** in WSL using the official install
          database: "<DATABASE>"
          warehouse: "<WAREHOUSE>"
          schema: DEV
-         threads: 4
    ```
 
-   Save with `CTRL+O`, press Enter, then `CTRL+X`.
+   
 
 9. **Verify connection**  
    ```bash
-   dbt-fusion debug
+   dbtf debug
    ```
 
    If everything is configured correctly, you should see:  
@@ -87,12 +92,10 @@ This guide shows how to install **dbt-fusion** in WSL using the official install
 
 10. **First run**  
     ```bash
-    dbt-fusion deps        # install packages (e.g., dbt-utils)
-    dbt-fusion build       # run models, tests, seeds, snapshots
-    dbt-fusion docs generate
-    dbt-fusion docs serve  # open docs in your browser
+    dbtf build       # run models, tests, seeds, snapshots
+
     ```
 
 ---
 
-✅ You now have dbt-fusion installed in WSL, connected to Snowflake, and ready to build your first project.
+✅
