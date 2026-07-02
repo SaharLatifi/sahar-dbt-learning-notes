@@ -26,17 +26,19 @@ This guide shows how to install **dbt-fusion** in WSL using the official install
       wsl --status
       ```
 4. **Install VS Code extensions**  
-   - WSL  
-   - Remote Explorer  
+   - WSL: Allows VS code to open and work directly inside your WSL (Linux) environment.
+   - Remote Explorer: Lets you view and manage remote environments, including WSL, making it easy to connect to and switch between them.
 
-5. **Initialize WSL in VS Code**  
-   - Open a *Remote Window*  
-   - Connect to WSL  
+5. **Open VS Code in WSL**
+   - Open VS Code
+   - Press ^+shift+p
+   - Run: WSL: Connect to WSL or WSL: Reopen folder in WSL
+   - Open the project folder  
 
-6. **Install dbt extension in VS Code**  
+7. **Install dbt extension in VS Code**  
    (Optional but recommended for syntax highlighting and navigation)  
 
-7. **Install dbt-fusion**  
+8. **Install dbt-fusion**  
    Run the official installer in WSL:  
 
    ```bash
@@ -48,14 +50,14 @@ This guide shows how to install **dbt-fusion** in WSL using the official install
    dbtf --version
    ```
 
-8. **Initialize a new project**  
+9. **Initialize a new project**  
    ```bash
    mkdir ~/projects && cd ~/projects
    dbtf init my_dbt_project  -->> Config Snowflake connection
    cd my_dbt_project
    ```
 
-9. **Configure Snowflake profile**  
+10. **Configure Snowflake profile**  
    To edit your dbt profile file in WSL:  
    ```bash
    nano ~/.dbt/profiles.yml
@@ -85,7 +87,7 @@ This guide shows how to install **dbt-fusion** in WSL using the official install
 
    
 
-10. **Verify connection**  
+11. **Verify connection**  
    ```bash
    dbtf debug
    ```
