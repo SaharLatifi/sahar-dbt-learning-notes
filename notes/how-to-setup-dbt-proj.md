@@ -20,18 +20,23 @@ This guide shows how to install **dbt-fusion** in WSL using the official install
 2. **Install WSL**  
    Follow the [Microsoft instructions](https://learn.microsoft.com/en-us/windows/wsl/install)
 
-3. **Install VS Code extensions**  
+   #### Check if WSL is already installed
+
+      ```bash
+      wsl --status
+      ```
+4. **Install VS Code extensions**  
    - WSL  
    - Remote Explorer  
 
-4. **Initialize WSL in VS Code**  
+5. **Initialize WSL in VS Code**  
    - Open a *Remote Window*  
    - Connect to WSL  
 
-5. **Install dbt extension in VS Code**  
+6. **Install dbt extension in VS Code**  
    (Optional but recommended for syntax highlighting and navigation)  
 
-6. **Install dbt-fusion**  
+7. **Install dbt-fusion**  
    Run the official installer in WSL:  
 
    ```bash
@@ -43,14 +48,14 @@ This guide shows how to install **dbt-fusion** in WSL using the official install
    dbtf --version
    ```
 
-7. **Initialize a new project**  
+8. **Initialize a new project**  
    ```bash
    mkdir ~/projects && cd ~/projects
    dbtf init my_dbt_project  -->> Config Snowflake connection
    cd my_dbt_project
    ```
 
-8. **Configure Snowflake profile**  
+9. **Configure Snowflake profile**  
    To edit your dbt profile file in WSL:  
    ```bash
    nano ~/.dbt/profiles.yml
@@ -80,7 +85,7 @@ This guide shows how to install **dbt-fusion** in WSL using the official install
 
    
 
-9. **Verify connection**  
+10. **Verify connection**  
    ```bash
    dbtf debug
    ```
@@ -90,7 +95,7 @@ This guide shows how to install **dbt-fusion** in WSL using the official install
    All checks passed!
    ```
 
-10. **First run**  
+11. **First run**  
     ```bash
     dbtf build       # run models, tests, seeds, snapshots
 
