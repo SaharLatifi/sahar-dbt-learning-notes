@@ -4,7 +4,7 @@
 
 - A **dbt model** is a SQL (or Python) file that defines a dataset.
 - Most SQL models consist of a single `SELECT` statement, often organized with CTEs.
-- Each model represents **one database object**.
+- Each model represents **one database object**. By default, one model file creates one database object.
 - By default, the object name is the same as the model file name.
 - The object created can be a **view**, **table**, **incremental table**, or **ephemeral model**, depending on the materialization configuration.
 
@@ -127,7 +127,11 @@ If you want the database object to have a different name than the file, configur
 
 ## Viewing Compiled SQL
 
-To use the dbt features in **VS Code**, install the **dbt VS Code extension** and sign in to your dbt account.
+To use the dbt features in **VS Code**:
+
+1. Install the **dbt VS Code extension**.
+2. Sign in to your dbt account.
+3. Open your dbt project.
 
 Once connected, the extension provides several useful features, including:
 
@@ -196,28 +200,9 @@ from {{ ref('orders') }}
 - Eliminates hardcoded object names.
 - Makes models portable across Development, Test, and Production environments.
 
-For example:
+During compilation, dbt replaces `ref()` with the correct database, schema, and object name for the active environment.
 
-```sql
-select *
-from {{ ref('stg_customers') }}
-```
-
-might compile to:
-
-```sql
-select *
-from DEV_ANALYTICS.STAGING.stg_customers
-```
-
-in Development, and:
-
-```sql
-select *
-from PROD_ANALYTICS.STAGING.stg_customers
-```
-
-in Production — **without changing your model code**.
+This allows the same model to run in Development, Test, and Production without changing the SQL code.
 
 ---
 
@@ -243,7 +228,7 @@ Always define raw tables in `sources.yml`.
 
 # Materializations
 
-Materialization determines **what type of database object dbt creates**.
+Materialization determines **how dbt builds a model in the data warehouse**. Depending on the materialization, dbt creates a **view**, **table**, **incremental table**, or no database object at all (**ephemeral**).
 
 ```sql
 {{ config(
@@ -276,6 +261,32 @@ Materialization determines **what type of database object dbt creates**.
 - Compiles into a CTE inside downstream models.
 - Useful for reusable transformation logic.
 
+
+## Materialization Comparison
+
+| Feature | View | Table | Incremental |
+|----------|------|-------|-------------|
+| Creates a database object | ✅ View | ✅ Table | ✅ Table |
+| Stores data | ❌ No | ✅ Yes | ✅ Yes |
+| Query performance | Slower (computed at query time) | Faster | Faster |
+| Build time | Fast | Slower (full rebuild) | Fast after the initial load |
+| Refresh behavior | Always reflects the latest source data | Rebuilt on every `dbt run` | Only inserts or updates changed records |
+| Storage required | Very little | Higher | Higher |
+| Best for | Staging models | Dimensions, marts, small fact tables | Large fact tables that grow over time |
+| Typical use case | Lightweight transformations | Business-ready datasets | Large transactional or event data |
+
+### Choosing the Right Materialization
+
+| If your model... | Recommended Materialization |
+|------------------|-----------------------------|
+| Cleans or renames source data | **View** |
+| Joins a few small tables | **View** |
+| Is queried frequently | **Table** |
+| Contains dimensions | **Table** |
+| Contains a small or medium fact table | **Table** |
+| Contains a very large fact table | **Incremental** |
+| Only provides reusable logic for other models | **Ephemeral** |
+
 ---
 
 ## Model Configuration
@@ -307,6 +318,117 @@ Example:
 | `cluster_by` | Clustering keys (Snowflake) |
 | `partition_by` | Partition configuration (BigQuery) |
 | `liquid_clustered_by` | Clustering configuration (Databricks) |
+
+
+### Simple Configuration Examples
+
+#### Tags
+
+Use tags to group models and run them together.
+
+```sql
+{{ config(
+    tags=['daily']
+) }}
+```
+
+Run all models with the `daily` tag:
+
+```bash
+dbt run --select tag:daily
+```
+
+---
+
+#### Alias
+
+Use `alias` when you want the database object name to be different from the model file name.
+
+```sql
+{{ config(
+    alias='customers'
+) }}
+```
+
+Example:
+
+```text
+Model file: stg_customers_cleaned.sql
+Database object: customers
+```
+
+---
+
+#### Enabled
+
+Use `enabled=false` to disable a model temporarily.
+
+```sql
+{{ config(
+    enabled=false
+) }}
+```
+
+Disabled models are ignored when you run dbt.
+
+---
+
+#### Pre-hook and Post-hook
+
+Use `pre_hook` to run SQL before the model runs.
+
+Use `post_hook` to run SQL after the model runs.
+
+```sql
+{{ config(
+    pre_hook="create schema if not exists analytics",
+    post_hook="grant select on {{ this }} to role reporter"
+) }}
+```
+
+---
+
+#### Cluster By — Snowflake
+
+Use `cluster_by` to improve performance on large Snowflake tables that are frequently filtered by specific columns.
+
+```sql
+{{ config(
+    materialized='table',
+    cluster_by=['sales_date']
+) }}
+```
+
+Best used for large tables filtered often by columns such as:
+
+- date
+- region
+- customer_id
+- status
+
+---
+
+#### Partition By
+
+`partition_by` is commonly used in platforms like BigQuery, Databricks, or Spark-based environments.
+
+```sql
+{{ config(
+    materialized='table',
+    partition_by={
+        "field": "sales_date",
+        "data_type": "date"
+    }
+) }}
+```
+
+Best practices:
+
+- Use partitioning for large tables.
+- Partition by a column commonly used in filters.
+- Date columns are usually the best choice.
+- Avoid partitioning by high-cardinality columns like unique IDs.
+- Do not over-partition small tables.
 
 ---
 
