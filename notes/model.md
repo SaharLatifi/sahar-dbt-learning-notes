@@ -1,106 +1,390 @@
 # 🟠 dbt Models — Key Concepts
 
-## Writing Models & Best Practices
-- A **dbt model** is just a `SELECT` statement, usually wrapped in a CTE.  
-- Create a **folder for each layer** (staging → intermediate → marts).  
-- Extend functionality with **Jinja** (`{% if %}`, loops, macros).  
-- Models can also be written in **Python** (in supported warehouses).  
-- To view compiled SQL (requires dbt VS Code extension):  
-  **Ctrl + Shift + P → Compile model**  
-- Models can **reference each other** using `ref()` and `source()`.  
-- dbt manages **environments, schemas, and lineage** automatically.
+## What is a dbt Model?
 
-### Best Practices
-- Default to **views** in staging and **tables** in marts.  
-- Maintain clear folder hierarchy: **staging → intermediate → marts**.
-- **Staging:**  
-  - 1:1 with source tables  
-  - Light transformations only (rename, cast, clean)  
-  - No joins or aggregations  
-  - Naming convention: `stg_[source]__[table]s.sql`  
-- **Intermediate:**  
-  - Centralize complex logic  
-  - Reusable building blocks (joins, aggregations)  
-  - Naming convention: `int_[entity]s_[verb]s.sql`  
-- **Marts:**  
-  - Business-ready entities (facts/dims)  
-  - Organized by business area (`marts/finance`, `marts/marketing`)  
-- Use **incremental** materialization for large fact tables where rebuilds are costly.  
-- Keep **ephemeral models** small — too many can bloat compiled SQL.  
-- Always define sources in `sources.yml` (avoid hardcoding schemas).  
-- Use `cluster_by` and `partition_by` for large datasets to optimize performance.  
+- A **dbt model** is a SQL (or Python) file that defines a dataset.
+- Most SQL models consist of a single `SELECT` statement, often organized with CTEs.
+- Each model represents **one database object**.
+- By default, the object name is the same as the model file name.
+- The object created can be a **view**, **table**, **incremental table**, or **ephemeral model**, depending on the materialization configuration.
 
 ---
 
-## ref()
-- A core feature that lets you reference one dbt model from another.  
-- Use `{{ ref('model_name') }}` instead of hardcoding table names.  
-- dbt automatically compiles refs to the correct **schema** and **table name** for the environment.  
-- Improves **readability** and makes SQL code cleaner.  
+## How dbt Works
+
+dbt **does not execute your SQL exactly as written**.
+
+Instead, dbt compiles your models into SQL that your data warehouse understands, then sends the compiled SQL to the warehouse for execution.
+
+> **dbt itself does not store or process data.** It generates SQL and delegates all execution to your data warehouse.
+
+During compilation, dbt:
+
+1. Reads your model.
+2. Resolves all `ref()`, `source()`, Jinja, macros, and variables.
+3. Applies model configurations.
+4. Generates the final SQL.
+5. Sends the SQL to the data warehouse for execution.
+
+The database, schema, warehouse, and credentials come from:
+
+- `profiles.yml` (connection settings)
+- `dbt_project.yml` (project configuration)
+- Model configuration (`config()`)
+
+Because these settings are separated from your SQL code, **the same model can run in Development, Test, and Production without changing the SQL.**
+
+---
+
+## Model Lifecycle
+
+When you run a model, dbt follows these steps:
+
+```text
+model.sql
+    │
+    ▼
+Read the model
+    │
+    ▼
+Compile the model
+    ├── Resolve ref() and source()
+    ├── Execute Jinja and macros
+    ├── Apply model configurations
+    ▼
+Generate compiled SQL
+    │
+    ▼
+Send SQL to the data warehouse
+    │
+    ▼
+Create or update a database object
+(View / Table / Incremental)
+```
+
+### Summary
+
+```text
+dbt Model
+      ↓
+Compiled SQL
+      ↓
+Data Warehouse
+      ↓
+Table / View
+```
+
+> **Tip:** You can inspect the generated SQL in:
+>
+> - `target/compiled/` – SQL after Jinja, `ref()`, and `source()` are resolved.
+> - `target/run/` – SQL that dbt executes against the data warehouse.
+
+---
+
+## Model Naming
+
+By default, dbt creates a database object with the same name as the model file.
 
 Example:
+
+```text
+models/staging/stg_customers.sql
+```
+
+creates:
+
+```text
+stg_customers
+```
+
+If you rename the model file:
+
+```text
+stg_customers.sql
+```
+
+to:
+
+```text
+stg_clients.sql
+```
+
+dbt creates a **new database object** named:
+
+```text
+stg_clients
+```
+
+The previous object (`stg_customers`) is **not automatically removed**.
+
+If you want the database object to have a different name than the file, configure an alias:
+
 ```sql
-select * from {{ ref('orders') }}
+{{ config(alias='customers') }}
 ```
 
 ---
 
-## source()
-- Use `{{ source('source_name', 'table_name') }}` to define raw sources.  
-- Makes models **environment-agnostic** and easier to maintain.  
+## Viewing Compiled SQL
 
-Example:
-```sql
-select * from {{ source('raw_sales', 'transactions') }}
+If you have the **dbt VS Code extension** installed:
+
+```text
+Ctrl + Shift + P
+→ dbt: Compile Model
 ```
+
+This allows you to compare your dbt model with the SQL generated by dbt.
+
+Your model:
+
+```sql
+select *
+from {{ ref('stg_orders') }}
+```
+
+Compiled SQL:
+
+```sql
+select *
+from DEV_ANALYTICS.STAGING.stg_orders
+```
+
+Inspecting the compiled SQL is one of the best ways to understand how dbt translates your code before executing it.
 
 ---
 
-## Materializations
+## `ref()`
+
+`ref()` is one of dbt's most important features.
+
+```sql
+select *
+from {{ ref('orders') }}
+```
+
+`ref()`:
+
+- References another dbt model.
+- Automatically resolves the correct database, schema, and object name.
+- Creates dependencies between models.
+- Allows dbt to determine the correct build order.
+- Eliminates hardcoded object names.
+- Makes models portable across Development, Test, and Production environments.
+
+For example:
+
+```sql
+select *
+from {{ ref('stg_customers') }}
+```
+
+might compile to:
+
+```sql
+select *
+from DEV_ANALYTICS.STAGING.stg_customers
+```
+
+in Development, and:
+
+```sql
+select *
+from PROD_ANALYTICS.STAGING.stg_customers
+```
+
+in Production — **without changing your model code**.
+
+---
+
+## `source()`
+
+Use `source()` to reference raw source tables.
+
+```sql
+select *
+from {{ source('raw_sales', 'transactions') }}
+```
+
+Benefits:
+
+- Avoids hardcoding database objects.
+- Centralizes source definitions.
+- Makes projects easier to maintain.
+- Supports lineage, testing, and documentation.
+
+Always define raw tables in `sources.yml`.
+
+---
+
+# Materializations
+
+Materialization determines **what type of database object dbt creates**.
 
 ```sql
 {{ config(
-  materialized = 'table' | 'view' | 'incremental' | 'ephemeral'
+    materialized='view'
 ) }}
 ```
 
-### Types
-- **Table** → creates or overwrites a physical table.  
-- **View** → creates or overwrites a view.  
-- **Incremental** → appends or updates only changed records (performance boost for large data).  
-- **Ephemeral** → exists only at compile time (inline CTE).  
-  - Simplifies logic without persisting results.  
-  - Good for transformations reused by multiple models but not needed in the warehouse.
+## Types
 
-### Materialized View (⚠️ Not supported in Snowflake)
-- A pre-computed table storing query results — a hybrid between a table and a view.  
-- The database handles refresh automatically.  
-- For **incremental** models, you must explicitly define how to find and merge new data.  
-- More info: [dbt Materializations Docs](https://docs.getdbt.com/docs/build/materializations)
+### View
+
+- Creates or replaces a database view.
+- Best for lightweight transformations.
+- Recommended for staging models.
+
+### Table
+
+- Creates or replaces a physical table.
+- Best for marts and frequently queried datasets.
+
+### Incremental
+
+- Processes only new or changed records.
+- Improves performance for large tables.
+- Requires incremental logic.
+
+### Ephemeral
+
+- Does **not** create a database object.
+- Compiles into a CTE inside downstream models.
+- Useful for reusable transformation logic.
 
 ---
 
-## Model Configurations — Common Parameters
+## Model Configuration
 
 Example:
+
 ```sql
 {{ config(
-  tags = ['daily'],
-  enabled = false,
-  schema = 'Tom',
-  pre_hook = "USE DATABASE DEV_DATABASE; CREATE SCHEMA IF NOT EXISTS Tom",
-  cluster_by = ['sales_date']
+    materialized='table',
+    tags=['daily'],
+    enabled=true,
+    schema='analytics',
+    cluster_by=['sales_date']
 ) }}
 ```
 
-### Common Config Parameters
-- `enabled:` enable/disable a model  
-- `tags:` assign model tags for grouping and orchestration  
-- `pre_hook:` SQL to run before model execution  
-- `post_hook:` SQL to run after model execution  
-- `database:` override default database  
-- `schema:` override default schema  
-  - dbt creates schema as `<main_schema>_<custom_name>`  
-- `cluster_by:` clustering keys (Snowflake)  
-- `partition_by:` partitioning configs (BigQuery)  
-- `liquid_clustered_by:` clustering configs (Databricks)  
+### Common Configuration Options
+
+| Configuration | Description |
+|---------------|-------------|
+| `materialized` | Type of object to create (`view`, `table`, `incremental`, `ephemeral`) |
+| `enabled` | Enable or disable a model |
+| `tags` | Group models for execution and orchestration |
+| `database` | Override the default database |
+| `schema` | Override the default schema |
+| `alias` | Change the database object name without renaming the file |
+| `pre_hook` | SQL executed before the model runs |
+| `post_hook` | SQL executed after the model runs |
+| `cluster_by` | Clustering keys (Snowflake) |
+| `partition_by` | Partition configuration (BigQuery) |
+| `liquid_clustered_by` | Clustering configuration (Databricks) |
+
+---
+
+## Model Selection
+
+Run all models:
+
+```bash
+dbt run
+```
+
+Run a specific model:
+
+```bash
+dbt run --select customers
+```
+
+Run a model and all of its upstream dependencies:
+
+```bash
+dbt run --select +customers
+```
+
+Run a model and all downstream models:
+
+```bash
+dbt run --select customers+
+```
+
+Run only models with a specific tag:
+
+```bash
+dbt run --select tag:daily
+```
+
+---
+
+# Best Practices
+
+## Folder Structure
+
+Organize models by transformation layer.
+
+```text
+models/
+├── staging/
+├── intermediate/
+└── marts/
+```
+
+### Staging
+
+- One model per source table.
+- Keep transformations simple.
+- Rename columns.
+- Cast data types.
+- Clean values.
+- Avoid joins and aggregations.
+- Naming convention:
+
+```text
+stg_[source]__[table].sql
+```
+
+### Intermediate
+
+- Build reusable business logic.
+- Perform joins and aggregations.
+- Keep each model focused on a single purpose.
+- Naming convention:
+
+```text
+int_[entity]_[purpose].sql
+```
+
+### Marts
+
+- Create business-ready fact and dimension models.
+- Organize by business domain.
+
+Example:
+
+```text
+marts/
+├── finance/
+├── sales/
+└── marketing/
+```
+
+---
+
+## General Recommendations
+
+- Use **views** for staging models.
+- Use **tables** for marts.
+- Use **incremental** materializations for large fact tables.
+- Keep **ephemeral** models small to avoid excessively large compiled SQL.
+- Use `ref()` instead of hardcoded table names.
+- Define all raw sources in `sources.yml`.
+- Use `cluster_by` or `partition_by` where appropriate for large datasets.
+- Keep models focused on a single responsibility.
+- Build transformations incrementally from **staging → intermediate → marts**.
+- Prefer reusable intermediate models instead of duplicating SQL.
+- Use meaningful model names that clearly describe the dataset they produce.
+- Regularly inspect the compiled SQL to understand what dbt is sending to the data warehouse.
