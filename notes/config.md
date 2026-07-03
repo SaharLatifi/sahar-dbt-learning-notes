@@ -1,7 +1,7 @@
 ## Profiles vs Project Configs
 
 - `profiles.yml` defines **connection settings** (warehouse, user, schema, etc.).
-- It is created in the **home directory** (`~/.dbt/`) — not inside a project.
+- It will usually be created in the **home directory** (`~/.dbt/`) — not inside a project.
 - Reason: you may have multiple dbt projects but want to share the same profile.
 - Best practices:
   - Keep `profiles.yml` in your home `~/.dbt/` folder.
