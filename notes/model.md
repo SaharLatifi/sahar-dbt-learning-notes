@@ -289,42 +289,161 @@ Materialization determines **how dbt builds a model in the data warehouse**. Dep
 
 ---
 
-## Model Configuration
+# Model Configuration
+
+Model configuration controls **how dbt builds and manages a model**.
+
+Configurations can be defined in three places.
+
+## Where Can Model Configuration Be Defined?
+
+| Location | Scope | Recommended Use |
+|----------|-------|-----------------|
+| `dbt_project.yml` | Project or folder | Default settings shared by many models |
+| Model YAML (`models.yml` / `properties.yml`) | Individual model | Metadata, documentation, tests, and some model configurations |
+| Model SQL (`config()`) | Individual model | Model-specific behavior that differs from the default |
+
+---
+
+## Configuration Priority
+
+If the same configuration is defined in multiple places, dbt uses the **most specific configuration**.
+
+```text
+Highest Priority
+──────────────────────────
+Model SQL (config())
+        ↓
+Model YAML
+        ↓
+dbt_project.yml
+──────────────────────────
+Lowest Priority
+```
+
+Example:
+
+- `dbt_project.yml`
+
+```yaml
+models:
+  my_project:
+    staging:
+      +materialized: view
+```
+
+- `models.yml`
+
+```yaml
+models:
+  - name: stg_customer
+    config:
+      materialized: table
+```
+
+- `stg_customer.sql`
+
+```sql
+{{ config(
+    materialized='incremental'
+) }}
+```
+
+Final materialization:
+
+```text
+incremental
+```
+
+because the SQL model has the highest priority.
+
+---
+
+## Best Practice
+
+### `dbt_project.yml`
+
+Use for **shared defaults**.
+
+Examples:
+
+- materialization
+- schema
+- tags
+- database
+
+Good example:
+
+```yaml
+models:
+  my_project:
+    staging:
+      +materialized: view
+
+    marts:
+      +materialized: table
+```
+
+---
+
+### Model YAML
+
+Use for:
+
+- descriptions
+- tests
+- documentation
+- column metadata
+- simple model configurations
+
+Example:
+
+```yaml
+models:
+  - name: dim_customer
+    config:
+      enabled: true
+      tags:
+        - daily
+```
+
+---
+
+### Model SQL
+
+Use when **only this model** needs different behavior.
 
 Example:
 
 ```sql
 {{ config(
-    materialized='table',
-    tags=['daily'],
-    enabled=true,
-    schema='analytics',
-    cluster_by=['sales_date']
+    materialized='incremental',
+    alias='customers'
 ) }}
 ```
 
-### Common Configuration Options
+---
 
-| Configuration | Description |
-|---------------|-------------|
-| `materialized` | Type of object to create (`view`, `table`, `incremental`, `ephemeral`) |
-| `enabled` | Enable or disable a model |
-| `tags` | Group models for execution and orchestration |
+## Common Configuration Options
+
+| Configuration | Purpose |
+|--------------|---------|
+| `materialized` | Choose how dbt builds the model |
+| `alias` | Change the database object name |
+| `enabled` | Enable or disable the model |
+| `tags` | Group models for execution |
 | `database` | Override the default database |
 | `schema` | Override the default schema |
-| `alias` | Change the database object name without renaming the file |
-| `pre_hook` | SQL executed before the model runs |
-| `post_hook` | SQL executed after the model runs |
-| `cluster_by` | Clustering keys (Snowflake) |
-| `partition_by` | Partition configuration (BigQuery) |
-| `liquid_clustered_by` | Clustering configuration (Databricks) |
+| `pre_hook` | Run SQL before building the model |
+| `post_hook` | Run SQL after building the model |
+| `cluster_by` | Snowflake clustering keys |
+| `partition_by` | BigQuery partitioning |
 
+---
 
-### Simple Configuration Examples
+## Common Examples
 
-#### Tags
-
-Use tags to group models and run them together.
+### Tags
 
 ```sql
 {{ config(
@@ -332,7 +451,7 @@ Use tags to group models and run them together.
 ) }}
 ```
 
-Run all models with the `daily` tag:
+Run tagged models:
 
 ```bash
 dbt run --select tag:daily
@@ -340,9 +459,7 @@ dbt run --select tag:daily
 
 ---
 
-#### Alias
-
-Use `alias` when you want the database object name to be different from the model file name.
+### Alias
 
 ```sql
 {{ config(
@@ -350,18 +467,9 @@ Use `alias` when you want the database object name to be different from the mode
 ) }}
 ```
 
-Example:
-
-```text
-Model file: stg_customers_cleaned.sql
-Database object: customers
-```
-
 ---
 
-#### Enabled
-
-Use `enabled=false` to disable a model temporarily.
+### Enabled
 
 ```sql
 {{ config(
@@ -369,52 +477,39 @@ Use `enabled=false` to disable a model temporarily.
 ) }}
 ```
 
-Disabled models are ignored when you run dbt.
-
 ---
 
-#### Pre-hook and Post-hook
-
-Use `pre_hook` to run SQL before the model runs.
-
-Use `post_hook` to run SQL after the model runs.
+### Pre-hook / Post-hook
 
 ```sql
 {{ config(
     pre_hook="create schema if not exists analytics",
-    post_hook="grant select on {{ this }} to role reporter"
+    post_hook="grant select on {{ this }} to role analyst"
 ) }}
 ```
 
 ---
 
-#### Cluster By — Snowflake
-
-Use `cluster_by` to improve performance on large Snowflake tables that are frequently filtered by specific columns.
+### Cluster By (Snowflake)
 
 ```sql
 {{ config(
-    materialized='table',
     cluster_by=['sales_date']
 ) }}
 ```
 
-Best used for large tables filtered often by columns such as:
+Use for large tables that are frequently filtered by:
 
 - date
+- customer
 - region
-- customer_id
-- status
 
 ---
 
-#### Partition By
-
-`partition_by` is commonly used in platforms like BigQuery, Databricks, or Spark-based environments.
+### Partition By (BigQuery)
 
 ```sql
 {{ config(
-    materialized='table',
     partition_by={
         "field": "sales_date",
         "data_type": "date"
@@ -424,12 +519,10 @@ Best used for large tables filtered often by columns such as:
 
 Best practices:
 
-- Use partitioning for large tables.
-- Partition by a column commonly used in filters.
-- Date columns are usually the best choice.
-- Avoid partitioning by high-cardinality columns like unique IDs.
-- Do not over-partition small tables.
-
+- Partition large tables.
+- Prefer date columns.
+- Avoid high-cardinality columns.
+- Do not partition small tables.
 ---
 
 ## Model Selection
