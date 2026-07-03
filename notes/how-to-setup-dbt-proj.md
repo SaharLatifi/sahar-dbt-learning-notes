@@ -54,7 +54,8 @@ This guide shows how to install **dbt-fusion** in WSL using the official install
    ```bash
    mkdir ~/projects && cd ~/projects
    dbtf init my_dbt_project  -->> Config Snowflake connection
-   cd my_dbt_project
+   cd my_dbt_project - you need to be in the dbt project root folder so the extension works properly
+   run code . to open and reload the window
    ```
 
 10. **Configure Snowflake profile**  
