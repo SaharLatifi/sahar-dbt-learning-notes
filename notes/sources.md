@@ -3,14 +3,16 @@
 ## 🔹 Overview
 `source()` is a Jinja function in dbt used to reference **raw data tables** stored in your warehouse.  
 It keeps your models **environment-agnostic** and helps dbt build **data lineage** between your sources and models.  
-Instead of hardcoding table paths, you define sources once and reuse them everywhere. 
+Instead of hardcoding table paths, you define sources once and **reuse** them everywhere. 
 
-We use ref for everything we created in dbt, and we use source for the source tables in raw database.
+We use ref for everything we created in dbt, and we use source for the source tables in raw database.   
+
+When we use source, we can see the source tables in lineage.
 
 ---
 
 ## 🔹 Defining Sources
-Sources are defined in a  `_source.yml` file within each staging model folder dbt project.
+Sources are defined in a  `_source.yml` file within each staging model folder dbt project. We usually have one source.yml file for each schema. use _source.yml as name, it will stays on top. 
 
 Example:
 ```yaml
@@ -35,14 +37,14 @@ Once defined, we can reference them dynamically:
 select *
 from {{ source('listings', 'reviews') }}
 ```
-
+source has two arguments, the source name and the table name. 
 dbt automatically resolves this to the correct database and schema (e.g., `AIRBNB_RAW.listings.reviews`), depending on your environment.
 
 ---
 
 ## 🔹 Defining Freshness
 We can define **freshness checks** inside the source configuration to ensure that raw tables are updated within expected time limits.  
-This helps monitor data pipelines and identify stale data early before running the pipeline.
+This helps monitor data pipelines and identify stale data early before running the pipeline. This helps with the cost optimization.
 
 Example:
 ```yaml
