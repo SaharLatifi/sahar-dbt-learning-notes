@@ -3,7 +3,9 @@
 ## 🔹 Overview
 `source()` is a Jinja function in dbt used to reference **raw data tables** stored in your warehouse.  
 It keeps your models **environment-agnostic** and helps dbt build **data lineage** between your sources and models.  
-Instead of hardcoding table paths, you define sources once and reuse them everywhere.
+Instead of hardcoding table paths, you define sources once and reuse them everywhere. 
+
+We use ref for everything we created in dbt, and we use source for the source tables in raw database.
 
 ---
 
