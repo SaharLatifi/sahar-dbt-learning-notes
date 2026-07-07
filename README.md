@@ -1,7 +1,7 @@
 
 
 # sahar_dbt_learning_notes
-Welcome! 👋 
+
 
 🟠 Personal repo to track my **dbt learning journey** — notes, templates, examples, and best practices.  
 This is not a production project but a knowledge base + playground.
