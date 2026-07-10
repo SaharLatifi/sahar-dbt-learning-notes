@@ -132,6 +132,35 @@ where email is null
 
 If this query returns any rows, the test fails.
 
+### Reusing Macros in Singular Tests
+
+Although singular tests are SQL files, they can call reusable macros.
+
+This helps avoid duplicating complex SQL across multiple business rule tests.
+
+Example:
+
+**Macro:**
+
+```sql
+{% macro invalid_dates(model) %}
+
+select *
+from {{ model }}
+where start_date > end_date
+
+{% endmacro %}
+```
+
+**Singular Test:**
+
+```sql
+-- tests/invalid_dates.sql
+
+{{ invalid_dates(ref('dim_customer')) }}
+```
+
+### This approach keeps singular tests simple while reusing the SQL logic through macros.  
 ---
 
 ## 🔹 Running Data Tests
