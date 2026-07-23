@@ -88,31 +88,31 @@ By default, dbt creates a database object with the same name as the model file.
 Example:
 
 ```text
-models/staging/stg_customers.sql
+models/staging/stg_customers_data__customers.sql
 ```
 
 creates:
 
 ```text
-stg_customers
+customers
 ```
 
 If you rename the model file:
 
 ```text
-stg_customers.sql
+customers.sql
 ```
 
 to:
 
 ```text
-stg_clients.sql
+clients.sql
 ```
 
 dbt creates a **new database object** named:
 
 ```text
-stg_clients
+clients
 ```
 
 The previous object (`stg_customers`) is **not automatically removed**.
