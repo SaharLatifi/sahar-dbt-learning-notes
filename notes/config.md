@@ -39,6 +39,10 @@ Typical settings include:
 - Documentation settings
 
 Unlike `profiles.yml`, every dbt project contains its own `dbt_project.yml`.
+> **Note:** The `profile` property in `dbt_project.yml` specifies which profile dbt should use from `~/.dbt/profiles.yml`. This allows multiple dbt projects to share the same `profiles.yml` while using different connection profiles.        
+
+
+
 
 There are different ways to configure dbt:
 
