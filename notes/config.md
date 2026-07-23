@@ -1,11 +1,44 @@
-## Profiles vs Project Configs
+## Profiles vs Project Configuration
 
-- `profiles.yml` defines **connection settings** (warehouse, user, schema, etc.).
-- It will usually be created in the **home directory** (`~/.dbt/`) — not inside a project.
-- Reason: you may have multiple dbt projects but want to share the same profile.
-- Best practices:
-  - Keep `profiles.yml` in your home `~/.dbt/` folder.
-  - Do not commit real credentials into Git.
+dbt uses two main configuration files, each with a different purpose.
+
+### `profiles.yml`
+
+Defines **how dbt connects to your data warehouse**.
+
+Typical settings include:
+- Warehouse/database
+- Schema
+- Username/password or authentication method
+- Threads
+- Target environments (dev, prod)
+
+Location:
+- Usually stored in `~/.dbt/profiles.yml`
+- Shared across multiple dbt projects
+
+Best practices:
+- Keep `profiles.yml` outside your project.
+- Never commit credentials to Git.
+
+---
+
+### `dbt_project.yml`
+
+Defines **how your dbt project behaves**.
+
+Typical settings include:
+- Project name and version
+- Model paths
+- Materialization defaults
+- Variables (`vars`)
+- Seeds
+- Snapshots
+- Tests
+- Macros
+- Documentation settings
+
+Unlike `profiles.yml`, every dbt project contains its own `dbt_project.yml`.
 
 There are different ways to configure dbt:
 
