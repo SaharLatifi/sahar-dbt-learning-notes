@@ -5,9 +5,10 @@
 It keeps your models **environment-agnostic** and helps dbt build **data lineage** between your sources and models.  
 Instead of hardcoding table paths, you define sources once and **reuse** them everywhere. 
 
-We use ref for everything we created in dbt, and we use source for the source tables in raw database.   
-
-When we use source, we can see the source tables in lineage.
+- We use ref for everything we created in dbt, and we use source for the source tables in raw database.   
+- It's good to have one source for each data source.
+- When we use source, we can see the source tables in lineage.
+- We can define freshness for sources.
 
 ---
 
