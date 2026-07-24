@@ -45,7 +45,7 @@ dbt automatically resolves this to the correct database and schema (e.g., `AIRBN
 
 ## 🔹 Defining Freshness
 We can define **freshness checks** inside the source configuration to ensure that raw tables are updated within expected time limits.  
-This helps monitor data pipelines and identify stale data early before running the pipeline. This helps with the cost optimization.
+This helps monitor data pipelines and identify stale data early before running the pipeline. This helps with the cost optimization. We are asking dbt to run the models, where the source dtaa has been updated.
 
 Example:
 ```yaml
