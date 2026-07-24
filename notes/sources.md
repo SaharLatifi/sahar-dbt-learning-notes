@@ -63,6 +63,7 @@ sources:
           warn_after: {count: 1, period: day}
           error_after: {count: 2, period: day}
 ```
+We can also move this code after schema to check freshness for all the tables defined in that schema.   
 
 ### 🧠 Explanation
 - **`loaded_at_field`** → column representing the last update timestamp  
