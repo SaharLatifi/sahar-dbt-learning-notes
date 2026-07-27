@@ -9,6 +9,9 @@ Instead of hardcoding table paths, you define sources once and **reuse** them ev
 - It's good to have one source for each data source.
 - When we use source, we can see the source tables in lineage.
 - We can define freshness for sources.
+- Each source YAML file supports a single folder or group of folders in a model hierarchy.
+- dbt does nit create source by default, and we need to create it ourselves.
+- We use source to define the raw data, source freshness, description, and tests.
 
 ---
 
@@ -45,7 +48,9 @@ dbt automatically resolves this to the correct database and schema (e.g., `AIRBN
 
 ## 🔹 Defining Freshness
 We can define **freshness checks** inside the source configuration to ensure that raw tables are updated within expected time limits.  
-This helps monitor data pipelines and identify stale data early before running the pipeline. This helps with the cost optimization. We are asking dbt to run the models, where the source dtaa has been updated.
+This helps monitor data pipelines and identify stale data early before running the pipeline. This helps with the cost optimization. We are asking dbt to run the models, where the source data has been updated. **However it's not a replacement for monitoring data ingestion process.**    
+
+We can define freshness at database level or table level. We also can override a data base level freshness by having more granular setting for a specific table.
 
 Example:
 ```yaml
@@ -62,7 +67,9 @@ sources:
         freshness:
           warn_after: {count: 1, period: day}
           error_after: {count: 2, period: day}
+        filter: <where-condition>
 ```
+With filter we can limit the amount of data scanned -> usefull for improving performance. This only applies to source freshness query and not anything else in the source YML file.
 We can also move this code after schema to check freshness for all the tables defined in that schema.   
 
 ### 🧠 Explanation
@@ -76,8 +83,100 @@ dbt source freshness
 ```
 
 
+dbt does not automatically run source freshness as part of dbt build or run.
+
+This feature allow us to make a data-aware approach.    
+We can instruct dbt to depend on sources that have been refreshed since their last successful run. Make your workflow more event-based by running:
+``` bash
+dbtf build --select source_status: fresher+
+``` 
+
+---  
+
+### Complete Source Properties Syntax
+``` yaml
+sources:
+  - name: <string> # required
+    description: <markdown_string>
+    database: <database_name>
+    schema: <schema_name>
+    loader: <string>
+
+    # requires v1.1+
+    config:
+      <source_config>: <config_value>
+      freshness:
+      # changed to config in v1.10
+      loaded_at_field: <column_name>
+        warn_after:
+          count: <positive_integer>
+          period: minute | hour | day
+        error_after:
+          count: <positive_integer>
+          period: minute | hour | day
+        filter: <where-condition>
+      meta: {<dictionary>} # changed to config in v1.10
+      tags: [<string>] # changed to config in v1.10
+
+    # deprecated in v1.10
+    overrides: <string>
+
+    quoting:
+      database: true | false
+      schema: true | false
+      identifier: true | false
+
+    tables:
+      - name: <string> #required
+        description: <markdown_string>
+        identifier: <table_name>
+        data_tests:
+          - <test>
+          - ... # declare additional tests
+        config:
+          loaded_at_field: <column_name>
+          meta: {<dictionary>}
+          tags: [<string>]
+          freshness:
+            warn_after:
+              count: <positive_integer>
+              period: minute | hour | day
+            error_after:
+              count: <positive_integer>
+              period: minute | hour | day
+            filter: <where-condition>
+
+        quoting:
+          database: true | false
+          schema: true | false
+          identifier: true | false
+        external: {<dictionary>}
+        columns:
+          - name: <column_name> # required
+            description: <markdown_string>
+            quote: true | false
+            data_tests:
+              - <test>
+              - ... # declare additional tests
+            config:
+              meta: {<dictionary>}
+              tags: [<string>]
+          - name: ... # declare properties of additional columns
+
+      - name: ... # declare properties of additional source tables
+
+  - name: ... # declare properties of additional sources
 ```
 
+    Link to dbt documentation:    
+    https://docs.getdbt.com/reference/source-properties?version=2.0&name=v2
+
+--- 
+### Benefits
+- Reusability: Define in a central location, reuse across multiple models.
+- Maintainability: Keep all datasource location in one place. Seperate your data source location from the actual code.
+- Lineage:  
+---
 ## 🔹 Summary
 ⚙️ Define in `_source.yml` under `/models/staging/[schema_name]/`  
 🧭 Use `{{ source('source_name', 'table_name') }}` in SQL  
