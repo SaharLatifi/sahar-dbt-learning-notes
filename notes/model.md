@@ -571,7 +571,7 @@ models/
 ├── intermediate/
 └── marts/
 ```
-
+<<It is recommended to add Masterdata directory for dimensions, so you can reference all those tables in more than one mart>>
 ### Staging
 
 - One model per source table.
