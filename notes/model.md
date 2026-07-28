@@ -181,6 +181,9 @@ The compiled SQL shows exactly what dbt sends to the data warehouse after resolv
 
 Inspecting the compiled SQL is one of the best ways to understand how dbt translates your code before execution.
 
+After runningn a dbt model, we can explore the compiled code and the code sent to the warehouse in **Target** directory. Target directory is used to store metadata, compiled SQL, and run SQL (the code actually shipped to the warehouse)
+- In **Compile** dirctory -> The config block is removed, the source and ref will be translated to the exact database name and object name. But still no DDL.
+- In **Run** dirctory -> You can see the final SLQ code shipped to the warehouse, so the compiled code will be injected into some DDL to cretae, or replace the view or any other object we specified.
 
 ## `ref()`
 
@@ -202,7 +205,11 @@ from {{ ref('orders') }}
 
 During compilation, dbt replaces `ref()` with the correct database, schema, and object name for the active environment.
 
-This allows the same model to run in Development, Test, and Production without changing the SQL code.
+This allows the same model to run in Development, Test, and Production without changing the SQL code.  
+dbt will be able to know the order in which to build the models, seeds, snapshots, also using source and ref funciton provides xontext to generate DAG that can be visually represented in documentation. 
+
+🪧**Never hard-code database object names directly in transformation code** 
+
 
 ---
 
@@ -249,12 +256,26 @@ We can use this **config block** within .sql file or in a dbt project to define 
 
 - Creates or replaces a physical table.
 - Best for marts and frequently queried datasets.
+- We use Table, when the view materialization starts to show low perormance.
+- Two types of storage: *column store* or *row store*
+  
+  🪧 In a columnar store, data is stored by column rather than by row. Since each storage block contains values of the same data type, storage and compression can be optimized, making individual column retrieval much more efficient.
+  
+  🪧 Table materialization recreates the entire table every time you run dbt for that model. While tables generally provide better query performance than views, rebuilding large tables on every run can become slow and resource-intensive. For large datasets, incremental models are often a      better choice because they process only new or changed records instead of rebuilding the entire table.
 
 ### Incremental
 
 - Processes only new or changed records.
 - Improves performance for large tables.
 - Requires incremental logic.
+  
+
+| Traditional ETL                      | dbt Incremental Models                                          |
+| ------------------------------------ | --------------------------------------------------------------- |
+| Determine the last loaded state      | dbt manages incremental execution                               |
+| Load new data into a temporary table | No manual temporary table required                              |
+| Write MERGE/UPSERT logic             | dbt generates and executes the appropriate incremental strategy |
+
 
 ### Ephemeral
 
