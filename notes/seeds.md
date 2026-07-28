@@ -5,6 +5,7 @@
 - Best for **small reference or mapping tables** (typically a few hundred rows).  
 - Not intended for:     **large datasets**  and **regularly changable data**
 - Good use case: mapping tables like US state abbreviation to state names, country code to names.
+- We can use them in downstream model using the {{ ref }} function.
 
 ---
 
