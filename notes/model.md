@@ -6,7 +6,7 @@
 - Most SQL models consist of a single `SELECT` statement, often organized with CTEs.
 - Each model represents **one database object**. By default, one model file creates one database object.
 - By default, the object name is the same as the model file name.
-- The object created can be a **view**, **table**, **incremental table**, or **ephemeral model**, depending on the materialization configuration.
+- There are 5 materializations that can be used with SQL moels: View (default), Table, Incremental, Ephemeral, Materialized views
 
 ---
 
@@ -228,8 +228,9 @@ Always define raw tables in `sources.yml`.
 
 # Materializations
 
-Materialization determines **how dbt builds a model in the data warehouse**. Depending on the materialization, dbt creates a **view**, **table**, **incremental table**, or no database object at all (**ephemeral**).
+Materialization determines **how dbt builds a model in the data warehouse**. Depending on the materialization, dbt creates a **view**, **table**, **incremental table**, **materialized view**, or no database object at all (**ephemeral**).  
 
+We can use this **config block** within .sql file or in a dbt project to define the materialization type we want dbt to use. dbt actually adds **create or replace view...** at the top of the code at run time before sending the code to the warehouse.
 ```sql
 {{ config(
     materialized='view'
