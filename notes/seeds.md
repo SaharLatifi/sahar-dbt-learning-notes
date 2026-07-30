@@ -26,7 +26,6 @@
 
 ***dbt will rebuild the table associated with the seeds files each time you invoke dbt seed or build.**
 
-
 Example structure:
 ```
 /seeds/
@@ -34,7 +33,30 @@ Example structure:
 ```
 
 ---
+## Configuring the Seed Schema
 
+To specify the target schema for your seed files, add the following configuration to `dbt_project.yml`:
+
+```yaml
+seeds:
+  airbnb_dbt:
+    +schema: raw
+```
+
+This configuration tells dbt to build the seed tables in a schema named:
+
+```text
+<target>_raw
+```
+
+For example, if your target  is `airbnb`, dbt will create the seed tables in:
+
+```text
+airbnb_raw
+```
+
+> **Note:** dbt prefixes the configured schema (`raw`) with your target schema by default, resulting in `<target_schema>_raw`.
+---
 ## Run Command
 Run the following command to load your seed data into the database:
 
