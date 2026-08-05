@@ -46,16 +46,16 @@ seeds:
 This configuration tells dbt to build the seed tables in a schema named:
 
 ```text
-<target>_raw
+<target>_seed
 ```
 
-For example, if your target  is `airbnb`, dbt will create the seed tables in:
+For example, if your target  is `airbnb_staging`, dbt will create the seed tables in:
 
 ```text
-airbnb_raw
+airbnb_staging_seed
 ```
 
-> **Note:** dbt prefixes the configured schema (`raw`) with your target schema by default, resulting in `<target_schema>_raw`.
+> **Note:** dbt prefixes the configured schema (`seed`) with your target schema by default, resulting in `<target_schema>_seed`.
 ---
 ## Run Command
 Run the following command to load your seed data into the database:
@@ -64,9 +64,9 @@ Run the following command to load your seed data into the database:
 dbtf seed
 dbtf seed --select <<seed name>>
 ```
-✅dbt build command also automatically builds seeds.   
+✅dbtf build command also automatically builds seeds.   
 
-✅dbt builds DAG, and build seeds before any downstream model is also able to use them.
+✅dbtf builds DAG, and build seeds before any downstream model is also able to use them.
 
 ---
 
