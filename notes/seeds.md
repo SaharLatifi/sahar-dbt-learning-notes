@@ -40,7 +40,7 @@ To specify the target schema for your seed files, add the following configuratio
 ```yaml
 seeds:
   airbnb_dbt:
-    +schema: raw
+    +schema: seed
 ```
 
 This configuration tells dbt to build the seed tables in a schema named:
