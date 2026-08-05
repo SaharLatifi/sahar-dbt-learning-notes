@@ -10,7 +10,7 @@ Instead of hardcoding table paths, you define sources once and **reuse** them ev
 - When we use source, we can see the source tables in lineage.
 - We can define freshness for sources.
 - Each source YAML file supports a single folder or group of folders in a model hierarchy.
-- dbt does nit create source by default, and we need to create it ourselves.
+- dbt does not create source by default, and we need to create it ourselves.
 - We use source to define the raw data, source freshness, description, and tests.
 
 ---
@@ -30,7 +30,6 @@ version: 2
   tables:
     - name: listings
     - name: neighbourhoods
-    - name: reviews 
 ```
 
 ---
@@ -39,10 +38,10 @@ version: 2
 Once defined, we can reference them dynamically:
 ```sql
 select *
-from {{ source('listings', 'reviews') }}
+from {{ source('listings', 'neighbourhoods') }}
 ```
 source has two arguments, the source name and the table name. 
-dbt automatically resolves this to the correct database and schema (e.g., `AIRBNB_RAW.listings.reviews`), depending on your environment.
+dbt automatically resolves this to the correct database and schema (e.g., `AIRBNB_RAW.listings.neighbourhoods`), depending on your environment.
 
 ---
 
@@ -50,7 +49,7 @@ dbt automatically resolves this to the correct database and schema (e.g., `AIRBN
 We can define **freshness checks** inside the source configuration to ensure that raw tables are updated within expected time limits.  
 This helps monitor data pipelines and identify stale data early before running the pipeline. This helps with the cost optimization. We are asking dbt to run the models, where the source data has been updated. **However it's not a replacement for monitoring data ingestion process.**    
 
-We can define freshness at database level or table level. We also can override a data base level freshness by having more granular setting for a specific table.
+We can define freshness at database level or table level. We also can override a database level freshness by having more granular setting for a specific table.
 
 Example:
 ```yaml
@@ -79,11 +78,12 @@ We can also move this code after schema to check freshness for all the tables de
 
 To run freshness checks:
 ```bash
-dbt source freshness
+dbtf source freshness
 ```
 
 
-dbt does not automatically run source freshness as part of dbt build or run.
+***dbt does not automatically run source freshness as part of dbt build or run.***
+
 
 This feature allow us to make a data-aware approach.    
 We can instruct dbt to depend on sources that have been refreshed since their last successful run. Make your workflow more event-based by running:
@@ -168,14 +168,14 @@ sources:
   - name: ... # declare properties of additional sources
 ```
 
-    Link to dbt documentation:    
+   -> Link to dbt documentation:    
     https://docs.getdbt.com/reference/source-properties?version=2.0&name=v2
 
 --- 
 ### Benefits
 - Reusability: Define in a central location, reuse across multiple models.
 - Maintainability: Keep all datasource location in one place. Seperate your data source location from the actual code.
-- Lineage:  
+- Lineage
 ---
 ## 🔹 Summary
 ⚙️ Define in `_source.yml` under `/models/staging/[schema_name]/`  
