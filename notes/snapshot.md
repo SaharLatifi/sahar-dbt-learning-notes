@@ -303,7 +303,7 @@ config:
 ---
 ## 🔹 Schema Changes
 
-> **TODO:** Add notes about how dbt snapshots handle schema changes (e.g., added, removed, renamed, or modified columns).
+> **TO DO:** Add notes about how dbt snapshots handle schema changes (e.g., added, removed, renamed, or modified columns).
 ---
 
 ## 🔹 Best Practices
