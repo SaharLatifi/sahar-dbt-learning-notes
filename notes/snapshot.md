@@ -4,9 +4,9 @@
 
 A **snapshot** tracks historical changes to records over time by implementing **Slowly Changing Dimension (SCD) Type 2 (SCD2)**.
 
-Keep transformations to a minimum. If data cleansing or business logic is required, perform it **before** the snapshot (for example, in a staging model). Snapshot is not idempotent.    
+- Snapshots can reference either a `source()` or a `ref()`.
+- Keep transformations to a minimum. If data cleansing or business logic is required, perform it **before** the snapshot (for example, in a staging model). Snapshot is not idempotent.    
 
-Snapshots can reference either a `source()` or a `ref()`.   
 
 ---
 
@@ -66,7 +66,7 @@ The snapshot records only **Active**. The temporary **Suspended** state is never
 
 ## 🔹 Snapshot File
 
-Snapshots are defined in **YAML** files (recommended).
+Snapshots are defined in **YAML** files.
 
 ```text
 snapshots/
@@ -158,25 +158,14 @@ config:
 
 #### When to use it
 
-This approach may be suitable when:
+This approach may be suitable when there is no reliable `updated_at` column, and the source contains only a small number of columns.  
 
-* There is no reliable `updated_at` column.
-* The source contains only a small number of columns.
-* The source structure is stable.
-* The number of columns is not expected to grow significantly.
-
-#### Considerations
-
-As the number of columns grows, dbt must compare more values. This can result in a larger and more complex query.
-
-Checking all columns may also track changes in fields that are not historically important.
-
-> Use this approach mainly for small and stable source tables.
+ℹ️ Always look at the query dbt generates in ***compile*** or ***run***. As the number of columns grows, dbt must compare more values. This can result in a larger and more complex query.
 
 
 ### Approach 2: Check a Column List
 
-List only the columns whose changes should create a new historical version.
+List only the columns whose changes should create a new historical version. dbt checks whether any of the listed columns have changed.
 
 ```yaml
 config:
@@ -187,8 +176,6 @@ config:
     - province
     - customer_status
 ```
-
-dbt checks whether any of the listed columns have changed.
 
 #### Advantages
 
@@ -274,7 +261,7 @@ The hash should also handle:
 ## 🔹 Running Snapshots
 
 ```bash
-dbt snapshot
+dbtf snapshot
 ```
 
 ---
@@ -291,7 +278,7 @@ Running a snapshot creates or updates a physical snapshot table and automaticall
 | `dbt_valid_to` | When this version expired (`NULL` = current version) |
 | `dbt_is_deleted` | Indicates whether the record has been hard deleted from the source (`TRUE` = deleted, `FALSE` = not deleted). Only available when hard delete tracking is enabled. This column will not be created by default |
 
-> **Note:** Snapshot metadata column names can be overridden using the `snapshot_meta_column_names` configuration.
+
 ---
 
 ## 🔹 Example
@@ -300,10 +287,6 @@ When a customer's city changes from Vancouver to Burnaby, dbt closes the previou
 
 ---
 
-
-
-> **Note:** The `dbt_is_deleted` metadata column is only created when `hard_deletes: new_record` is used.
----
 ## 🔹 Hard Delete Handling
 
 By default, dbt snapshots assume records are **updated**, not physically deleted. If a record is removed from the source, dbt will not detect the deletion unless hard delete tracking is configured.
@@ -317,22 +300,6 @@ config:
   updated_at: updated_at
   hard_deletes: ignore | invalidate | new_record
 ```
-
-| Option | Behavior |
-|--------|----------|
-| `ignore` | Ignore deleted records. The snapshot is not updated. **(Default)** |
-| `invalidate` | Mark the current snapshot record as no longer valid by setting `dbt_valid_to`. No new row is inserted. |
-| `new_record` | Insert a new snapshot version representing the deletion and populate `dbt_is_deleted = TRUE`. This preserves the deletion as part of the record's history. |
-
-
-This also adds the `dbt_is_deleted` metadata column:
-
-- `FALSE` → Record exists in the source.
-- `TRUE` → Record has been deleted from the source.
-
-> Use hard delete tracking only when the business needs to preserve a history of deleted records.
-
-
 ---
 ## 🔹 Schema Changes
 
