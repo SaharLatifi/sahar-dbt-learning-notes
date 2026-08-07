@@ -181,9 +181,9 @@ The compiled SQL shows exactly what dbt sends to the data warehouse after resolv
 
 Inspecting the compiled SQL is one of the best ways to understand how dbt translates your code before execution.
 
-After runningn a dbt model, we can explore the compiled code and the code sent to the warehouse in **Target** directory. Target directory is used to store metadata, compiled SQL, and run SQL (the code actually shipped to the warehouse)
+After running a dbt model, we can explore the compiled code and the code sent to the warehouse in **Target** directory. Target directory is used to store metadata, compiled SQL, and run SQL (the code actually shipped to the warehouse)
 - In **Compile** dirctory -> The config block is removed, the source and ref will be translated to the exact database name and object name. But still no DDL.
-- In **Run** dirctory -> You can see the final SLQ code shipped to the warehouse, so the compiled code will be injected into some DDL to cretae, or replace the view or any other object we specified.
+- In **Run** dirctory -> You can see the final SQL code shipped to the warehouse, so the compiled code will be injected into some DDL to cretae, or replace the view or any other object we specified.
 
 ## `ref()`
 
@@ -203,10 +203,10 @@ from {{ ref('orders') }}
 - Eliminates hardcoded object names.
 - Makes models portable across Development, Test, and Production environments.
 
-During compilation, dbt replaces `ref()` with the correct database, schema, and object name for the active environment.
+During compilation, dbt replaces `ref()` with the correct database, schema, and object name ***for the active environment.***
 
 This allows the same model to run in Development, Test, and Production without changing the SQL code.  
-dbt will be able to know the order in which to build the models, seeds, snapshots, also using source and ref funciton provides xontext to generate DAG that can be visually represented in documentation. 
+dbt will be able to know the order in which to build the models, seeds, snapshots, also using source and ref funciton provides context to generate DAG that can be visually represented in documentation. 
 
 🪧**Never hard-code database object names directly in transformation code** 
 
@@ -288,7 +288,7 @@ We can use this **config block** within .sql file or in a dbt project to define 
 
 | Feature | View | Table | Incremental |
 |----------|------|-------|-------------|
-| Creates a database object | ✅ View | ✅ Table | ✅ Table |
+| Creates a database object | ✅ Yes | ✅ Yes | ✅ Yes |
 | Stores data | ❌ No | ✅ Yes | ✅ Yes |
 | Query performance | Slower (computed at query time) | Faster | Faster |
 | Build time | Fast | Slower (full rebuild) | Fast after the initial load |
