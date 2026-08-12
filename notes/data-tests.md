@@ -125,18 +125,35 @@ Example folder:
 
 ```text
 tests/
-└── superhosts_without_verification.sql
+└── listings_multiple_current_records.sql
 ```
 
 Example:
 
 ```sql
-select *
-from {{ ref('dim_host') }}
-where host_is_superhost = true
-  and has_gov_id = false
+{{ config(
+    severity='error',
+    store_failures=true
+) }}
+
+with listings_multiple_current_records as (
+  select 
+    source_listing_id,
+    count(*) as current_records_count
+  from {{ ref('scd_property__listings')}}
+  where dbt_valid_to is null
+  group by source_listing_id
+  having count(*) > 1
+) 
+select * from listings_multiple_current_records
+
 ```
 
+To run this test:
+
+```bash
+dbtf test -s listings_multiple_current_records
+```
 If this query returns any rows, the test fails.
 
 ### Reusing Macros in Singular Tests
