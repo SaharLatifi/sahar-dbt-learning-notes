@@ -65,7 +65,13 @@ Power BI Desktop creates a project folder containing the report and semantic mod
 
 ## 📁 Power BI Project Structure
 
-When a report is saved as a Power BI Project, Power BI Desktop separates the report and semantic model into folders.
+When a report is saved as a Power BI Project, Power BI Desktop separates the report and semantic model into folders.  
+
+You can access these folders directly from Power BI Desktop. At the top of the Power BI Desktop window, select the report or semantic model name to open its corresponding project folder.
+
+📷 Screenshot: Report and semantic model options at the top of Power BI Desktop
+
+This makes it easy to view the files that make up your Power BI project.  
 
 A typical project structure looks similar to:
 
@@ -138,25 +144,6 @@ It points Power BI Desktop to the associated report and semantic model folders.
 
 ---
 
-## 💻 Open a `.pbip` Project in VS Code
-
-Power BI project definitions are stored as text-based files, primarily using formats such as **JSON** and **TMDL**.
-
-These files can be viewed and, when appropriate, edited directly in **VS Code**.
-
-To open the project in VS Code, open the **root project folder** — the folder containing the `.pbip` file.
-
-> 📷 **Screenshot:** Power BI project opened in VS Code
-
-> **Tip:** Open the entire project folder rather than an individual report or semantic model folder so you can view the complete project structure.
-
-### External Changes
-
-Power BI Desktop may not automatically detect changes made externally while the project is already open.
-
-If project files are modified directly in VS Code, you may need to reopen or restart Power BI Desktop before the changes are reflected.
-
----
 
 ## 🔐 Sensitive Data and Git
 
@@ -180,7 +167,7 @@ If a client is filtered by PHN directly in Power Query, the PHN may appear as pl
 
 If the project is committed, that hard-coded value may also become part of the **Git history**.
 
-> ⚠️ **Important:** Never include PHNs, client identifiers, passwords, access tokens, credentials, connection secrets, or other sensitive information as hard-coded values in Power BI project files.
+> ⚠️ **Important:** Never include PHNs, client identifiers, passwords, credentials, connection secrets, or other sensitive information as hard-coded values in Power BI project files.
 
 ---
 
@@ -197,3 +184,13 @@ Before committing a Power BI project:
 
 For the general Git process, including branching, committing, pushing, pull requests, and merging, follow the team's existing **Git workflow and guidelines**.
 
+---
+## 💻 Viewing a .pbip Project in VS Code
+
+A Power BI project can be opened in VS Code to view and inspect the underlying project files.
+
+To view the complete project structure, open the root project folder — the folder containing the .pbip file — rather than opening the report or semantic model folder individually.
+
+📷 Screenshot: Power BI project opened in VS Code
+
+---
