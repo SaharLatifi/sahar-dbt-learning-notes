@@ -12,18 +12,18 @@ Power BI reports must be saved in the `.pbip` (**Power BI Project**) format so t
 
 Before using this workflow, make sure:
 
-- The **Power BI Project (`.pbip`)** feature is enabled in Power BI Desktop.
-- **GitHub Desktop** is installed and configured.
-- You have access to the appropriate GitHub repository.
-- The repository has been cloned to your local computer.
+* The **Power BI Project (`.pbip`)** feature is enabled in Power BI Desktop.
+* **GitHub Desktop** is installed and configured.
+* You have access to the appropriate GitHub repository.
+* The repository has been cloned to your local computer.
 
 > **Note:** See the **Power BI & Git Guide** for instructions on enabling the `.pbip` feature.
 
 ---
 
-# 🆕 First-Time Setup
+# 🔄 Power BI Version Control Workflow
 
-Use this workflow when adding an existing `.pbix` report to Git for the first time.
+Follow the steps below to manage Power BI projects using **Git and GitHub Desktop**.
 
 ## 1. Open the Repository in GitHub Desktop
 
@@ -37,7 +37,7 @@ If the repository has not already been cloned to your computer, clone it first.
 
 ## 2. Sync the `main` Branch
 
-Before starting, make sure your local `main` branch contains the latest version of the repository.
+Before starting new work, make sure your local `main` branch contains the latest version of the repository.
 
 1. Select **Current Branch > main**.
 2. Click **Fetch origin**.
@@ -65,159 +65,40 @@ feat-add-client-summary-dashboard
 
 Follow the team's **Branch Guidelines** for branch naming conventions.
 
+> ⚠️ **Important:** Do not make Power BI changes directly on `main`.
+
 > 📷 **Screenshot:** Creating a new branch in GitHub Desktop
 
 ---
 
-## 4. Save the Power BI Report as `.pbip`
+## 4. Open or Add the Power BI Project
 
-Open the existing `.pbix` report in **Power BI Desktop**.
+At this step, follow the appropriate instructions depending on whether you are adding a Power BI report to Git for the first time or working with an existing `.pbip` project.
 
-1. Go to **File > Save as**.
-2. Select **Power BI Project files (`*.pbip`)**.
-3. Save the project in the appropriate location **inside the local Git repository**.
+### 🆕 Adding a Power BI Report for the First Time
+
+If you are adding an existing `.pbix` report to Git for the first time:
+
+1. Open the `.pbix` report in **Power BI Desktop**.
+2. Go to **File > Save as**.
+3. Select **Power BI Project files (`*.pbip`)**.
+4. Save the project in the appropriate location **inside the local Git repository**.
 
 Power BI Desktop will create the `.pbip` file along with the associated `.Report` and `.SemanticModel` folders.
 
-> 📷 **Screenshot:** Saving the report as `.pbip`
-
 > ⚠️ **Important:** Make sure the project is saved inside the correct local Git repository so GitHub Desktop can detect and track the project files.
 
----
+> 📷 **Screenshot:** Saving the report as `.pbip`
 
-## 5. Review the Project Files
+### 🔁 Working with an Existing Power BI Project
 
-Return to **GitHub Desktop** and review the files listed under **Changes**.
+If the Power BI project is already stored in Git:
 
-Before committing:
+1. Open the existing `.pbip` file from your local repository.
+2. Make the required changes in **Power BI Desktop**.
+3. Save the project when your changes are complete.
 
-1. Confirm that the expected `.pbip`, `.Report`, and `.SemanticModel` files have been added.
-2. Confirm that the required Power BI exclusions are included in `.gitignore`.
-3. Review the changed files for hard-coded or sensitive information.
-4. Make sure only the required project files are included in the commit.
-
-> ⚠️ **Important:** Never commit PHNs, client identifiers, credentials, passwords, connection information, or other sensitive information.
-
-> 📷 **Screenshot:** Power BI project files shown under Changes in GitHub Desktop
-
----
-
-## 6. Commit the Project
-
-Enter a clear commit message describing the addition of the Power BI project.
-
-Example:
-
-```text
-feat: add client summary Power BI project
-```
-
-Click **Commit to `<branch-name>`**.
-
-Follow the team's **Commit Guidelines** for commit message conventions.
-
----
-
-## 7. Publish the Branch
-
-Click **Publish branch** to send the new branch and its commits to GitHub.
-
-> 📷 **Screenshot:** Publish branch in GitHub Desktop
-
----
-
-## 8. Create a Pull Request
-
-After publishing the branch:
-
-1. Click **Preview Pull Request**.
-2. Confirm that the base branch is `main`.
-3. Review the changes.
-4. Click **Create Pull Request**.
-5. Complete the pull request in GitHub.
-
-Follow the team's **Pull Request Guidelines** for pull request requirements.
-
-> 📷 **Screenshot:** Creating a pull request from GitHub Desktop
-
----
-
-## 9. Merge and Delete the Branch
-
-Once the pull request has been reviewed and approved:
-
-1. Merge the pull request into `main`.
-2. Delete the completed branch when it is no longer needed.
-
-Follow the team's **Merge & Delete Guidelines** for the standard process.
-
-The Power BI `.pbip` project is now stored in the repository and managed through Git.
-
----
-
-# 🔁 Ongoing Power BI Changes
-
-Once a Power BI project has been added to Git, use the following workflow for future changes.
-
-> **Note:** You do not need to save the report as `.pbip` again. Open and work from the existing `.pbip` project stored in your local repository.
-
-## 1. Sync `main`
-
-Before starting a new change:
-
-1. Switch to **main** in GitHub Desktop.
-2. Click **Fetch origin**.
-3. Click **Pull origin** if updates are available.
-
-This ensures you are starting from the latest approved version of the Power BI project.
-
----
-
-## 2. Create a New Branch
-
-Create a new branch from the updated `main` branch.
-
-Example:
-
-```text
-update-dashboard-filters
-```
-
-Follow the team's **Branch Guidelines** for branch naming conventions.
-
-> ⚠️ **Important:** Do not make Power BI changes directly on `main`.
-
----
-
-## 3. Open the `.pbip` Project
-
-Open the `.pbip` file stored in your local repository.
-
-For example:
-
-```text
-ClientSummary/
-│
-├── ClientSummary.pbip
-├── ClientSummary.Report/
-└── ClientSummary.SemanticModel/
-```
-
-Open:
-
-```text
-ClientSummary.pbip
-```
-
-This opens the associated report and semantic model in Power BI Desktop.
-
----
-
-## 4. Make and Save Your Changes
-
-Make the required changes in **Power BI Desktop**.
-
-Save the project when your changes are complete.
+> **Note:** You do not need to save the report as `.pbip` again. Continue working from the existing `.pbip` project.
 
 ---
 
@@ -230,11 +111,16 @@ Before committing:
 1. Confirm that the changes are expected.
 2. Review Power Query and project definitions for hard-coded values.
 3. Check for sensitive or confidential information.
-4. Make sure only the intended files are included.
+4. Make sure only the intended project files are included.
 
-> ⚠️ **Important:** Never commit sensitive or confidential information.
+If you are adding a Power BI project for the first time, also confirm that:
 
-> 📷 **Screenshot:** Power BI changes displayed in GitHub Desktop
+* The expected `.pbip`, `.Report`, and `.SemanticModel` files have been added.
+* The required Power BI exclusions are included in `.gitignore`.
+
+> ⚠️ **Important:** Never commit PHNs, client identifiers, credentials, passwords, connection information, or other sensitive information.
+
+> 📷 **Screenshot:** Power BI project changes displayed in GitHub Desktop
 
 ---
 
@@ -242,7 +128,13 @@ Before committing:
 
 Enter a clear commit message describing the change.
 
-Example:
+Example for adding a new Power BI project:
+
+```text
+feat: add client summary Power BI project
+```
+
+Example for updating an existing project:
 
 ```text
 update: update dashboard filters
@@ -250,21 +142,24 @@ update: update dashboard filters
 
 Click **Commit to `<branch-name>`**.
 
-Follow the team's **Commit Guidelines**.
+Follow the team's **Commit Guidelines** for commit message conventions.
 
 ---
 
-## 7. Push the Changes
+## 7. Push the Branch
 
-Click **Push origin** to send your committed changes to GitHub.
+Send the branch and commits to GitHub.
 
-> 📷 **Screenshot:** Push origin in GitHub Desktop
+* For a new branch, click **Publish branch**.
+* For a branch that has already been published, click **Push origin**.
+
+> 📷 **Screenshot:** Publish branch / Push origin in GitHub Desktop
 
 ---
 
 ## 8. Create a Pull Request
 
-After pushing the changes:
+After pushing the branch:
 
 1. Click **Preview Pull Request**.
 2. Confirm that the base branch is `main`.
@@ -273,6 +168,8 @@ After pushing the changes:
 5. Complete the pull request in GitHub.
 
 Follow the team's **Pull Request Guidelines**.
+
+> 📷 **Screenshot:** Creating a pull request from GitHub Desktop
 
 ---
 
@@ -286,7 +183,7 @@ The merged version becomes the latest approved version of the Power BI project.
 
 ## 10. Delete the Completed Branch
 
-Delete the branch once the pull request has been merged and the branch is no longer needed.
+Once the pull request has been merged and the branch is no longer needed, delete the branch.
 
 Follow the team's **Merge & Delete Guidelines**.
 
@@ -294,10 +191,41 @@ Follow the team's **Merge & Delete Guidelines**.
 
 ## 11. Sync `main`
 
-Return to GitHub Desktop:
+After the merge:
 
-1. Switch to **main**.
-2. Click **Fetch origin**.
-3. Click **Pull origin** if updates are available.
+1. Return to **GitHub Desktop**.
+2. Switch to `main`.
+3. Click **Fetch origin**.
+4. Click **Pull origin** if updates are available.
 
-Your local `main` will now contain the latest merged Power BI changes and will be ready for the next change.
+Your local `main` will now contain the latest approved version of the Power BI project.
+
+---
+
+## ✅ Workflow Summary
+
+```text
+Sync main
+    ↓
+Create branch
+    ↓
+Open or add Power BI project
+    ↓
+Make and save changes
+    ↓
+Review changes
+    ↓
+Check for sensitive data
+    ↓
+Commit
+    ↓
+Push / Publish
+    ↓
+Create Pull Request
+    ↓
+Review and merge
+    ↓
+Delete branch
+    ↓
+Sync main
+```
