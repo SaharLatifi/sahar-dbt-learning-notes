@@ -440,6 +440,141 @@ where order_date >= '2026-08-01'
 The quotes are part of the SQL, not something automatically added by `{{ }}`.
 
 ---
+## 🔹 Jinja Functions for dbt
+
+dbt provides additional **Jinja functions, variables, and context objects** that can be used inside dbt projects.
+
+Some commonly used ones are:
+
+- `target`
+- `this`
+- `log()`
+- `var()`
+- `env_var()`
+- `adapter`
+
+### `target`
+
+`target` gives us access to information about the **active connection configuration that dbt is using to connect to the data platform**.
+
+This information comes from the active target/output configured in `profiles.yml`.
+
+
+#### Platform-Independent Attributes
+
+These attributes are available across dbt platforms/adapters:
+
+* `target.profile_name` → name of the dbt profile being used
+* `target.name` → name of the active target, such as `dev` or `prod`
+* `target.schema` → schema configured for the active target
+* `target.type` → type of data platform/adapter, such as `snowflake`, `bigquery`, or `postgres`
+* `target.threads` → number of threads dbt can use to execute work in parallel
+
+For example:
+
+```sql
+{{ target.name }}
+```
+
+could render as:
+
+```text
+dev
+```
+
+`target` is especially useful when we want dbt to behave differently depending on the active environment:
+
+```sql
+{% if target.name == 'dev' %}
+    limit 100
+{% endif %}
+```
+
+If the active target is `dev`, the generated SQL includes:
+
+```sql
+limit 100
+```
+
+> **Note:** `target` is a Jinja context object rather than a function. It provides information about the active dbt connection/target configuration.
+
+### `this`
+
+`this` represents the **current model's database relation**.
+
+It allows us to refer to the model that dbt is currently building without hard-coding its database, schema, or table name. We should use `this` instead of `ref()` because the model is trying to reference **itself**.
+
+For example:
+
+```jinja
+{{ this }}
+```
+
+If the current model is `fct__orders`, it could render as:
+
+```sql
+AIRBNB_MART.ANALYTICS.FCT__ORDERS
+```
+
+`this` can also provide access to individual parts of the current relation:
+
+```jinja
+{{ this.database }}
+{{ this.schema }}
+{{ this.identifier }}
+```
+
+For example:
+
+* `this.database` → database where the current model is being built
+* `this.schema` → schema where the current model is being built
+* `this.identifier` → current model's relation name
+
+#### Common Use: Incremental Models
+
+`this` is particularly useful in **incremental models**, where we may need to query the existing version of the model.
+
+```sql
+select *
+from {{ ref('stg__orders') }}
+
+{% if is_incremental() %}
+
+where updated_at > (
+    select max(updated_at)
+    from {{ this }}
+)
+
+{% endif %}
+```
+
+If the current model is `fct__orders`, `{{ this }}` could compile to:
+
+```sql
+AIRBNB_MART.ANALYTICS.FCT__ORDERS
+```
+
+This allows the model to compare incoming records with the data that already exists in the target table.
+
+We should use `this` here instead of `ref()` because the model is trying to reference **itself**.
+
+For example, this would be a problem:
+
+```jinja
+{{ ref('fct__orders') }}
+```
+
+inside the `fct__orders` model itself.
+
+Using `ref()` would create a dependency from the model back to itself, resulting in a **circular dependency** in the dbt DAG.
+
+`this` avoids that problem because it refers directly to the current model's target relation without creating a dbt model dependency.
+
+> **Note:** `this` is a dbt Jinja **context object**, not technically a function. It dynamically refers to the relation for the current model.
+
+
+
+---
 
 ## 🔹 Summary
 
