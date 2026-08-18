@@ -572,10 +572,147 @@ Using `ref()` would create a dependency from the model back to itself, resulting
 
 > **Note:** `this` is a dbt Jinja **context object**, not technically a function. It dynamically refers to the relation for the current model.
 
+### `log()`
+
+`log()` is a dbt Jinja function used to **write messages to dbt's logs**.
+
+It is useful for debugging macros, checking variable values, and understanding what dbt is doing while Jinja code is running.
+
+Basic syntax:
+
+```jinja id="pxh9se"
+{{ log("This is a log message", info=True) }}
+```
+
+The `info` parameter controls whether the message is also written to standard output:
+
+* `info=False` → writes the message to the dbt log file. This is the default.
+* `info=True` → also displays the message in the command-line output.
+
+#### Logging Variables
+
+`log()` is particularly useful when debugging Jinja variables.
+
+```jinja id="0ug8mb"
+{% set threshold = 100 %}
+
+{{ log("Threshold: " ~ threshold, info=True) }}
+```
+
+The `~` operator is used in Jinja to **concatenate values as strings**.
+
+The output could look similar to:
+
+```text id="lnf6br"
+Threshold: 100
+```
+
+We can also use `log()` with dbt context objects:
+
+```jinja id="5cprmx"
+{{ log("Current target: " ~ target.name, info=True) }}
+{{ log("Current model: " ~ this, info=True) }}
+```
+
+> **Note:** `log()` is mainly useful for **debugging and visibility during dbt execution**. It does not generate SQL that is sent to the data warehouse.
+
+Tip: To test log() without creating a model, add it inside a macro and execute the macro using dbt run-operation.
+
+---
+### `adapter`
+
+`adapter` is a dbt Jinja **context object** that gives us access to functionality provided by the active **data platform adapter**.
+
+The adapter is the layer dbt uses to interact with a specific data platform, such as Snowflake, BigQuery, or Postgres.
+
+Conceptually:
+
+```text
+dbt / Jinja
+     ↓
+  adapter
+     ↓
+Data Platform
+```
+
+The active adapter depends on the platform configured in the dbt profile.
+
+For example, when using Snowflake:
+
+```yaml
+type: snowflake
+```
+
+dbt uses the Snowflake adapter.
+
+#### What Can We Use `adapter` For?
+
+`adapter` provides methods that allow Jinja code to interact with or retrieve metadata about objects in the data platform.
+
+For example:
+
+```jinja
+{{ adapter.get_relation(...) }}
+```
+
+can be used to find a relation in the database.
+
+Another useful method is:
+
+```jinja
+{{ adapter.get_columns_in_relation(this) }}
+```
+
+which retrieves information about the columns in a relation.
+
+#### `this` vs `adapter`
+
+`this` and `adapter` have different purposes:
+
+* `this` → represents the **current model/relation**
+* `adapter` → provides functionality for **interacting with the data platform**
+
+They can also be used together:
+
+```jinja
+{{ adapter.get_columns_in_relation(this) }}
+```
+
+Here:
+
+1. `this` identifies the current relation.
+2. `adapter` communicates with the data platform to retrieve information about its columns.
+
+A simple way to remember the difference:
+
+> **`this` = What relation am I working with?**
+> **`adapter` = How can dbt interact with the data platform?**
+
+#### When Do We Use `adapter`?
+
+We usually do not need to use `adapter` directly in normal dbt models.
+
+Functions and objects such as:
+
+```jinja
+{{ ref('stg__customers') }}
+{{ source('raw', 'customers') }}
+{{ this }}
+```
+
+already handle many common operations for us.
+
+`adapter` becomes more useful when writing **advanced macros** that need to inspect or interact with the data platform, such as:
+
+* Checking whether a relation exists
+* Retrieving columns from a relation
+* Retrieving database metadata
+* Performing adapter-specific operations
+
+> **Note:** `adapter` is not technically a function. It is a dbt Jinja **context object** that provides methods for interacting with the active data platform adapter.
 
 
 ---
-
 ## 🔹 Summary
 
 Jinja allows dbt to **generate SQL dynamically before execution**.
