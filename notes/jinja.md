@@ -711,6 +711,227 @@ already handle many common operations for us.
 
 > **Note:** `adapter` is not technically a function. It is a dbt Jinja **context object** that provides methods for interacting with the active data platform adapter.
 
+---
+### `var()`
+
+`var()` is a dbt Jinja function used to **access project-level variables**.
+
+#### `vars`, `var()`, and `set`
+
+It is important to distinguish between these three:
+
+* `vars:` → defines **project-level variables** in `dbt_project.yml`
+* `--vars` → supplies or overrides project variables from the command line for a dbt command
+* `var()` → **accesses/retrieves** a project-level variable inside Jinja
+* `{% set %}` → defines a **local Jinja variable** inside a model, macro, or other Jinja context
+
+A simple way to remember:
+
+> **`vars:`**** defines → ****`var()`**** reads → ****`set`**** creates locally**
+
+#### Defining Project Variables
+
+Project variables can be defined under `vars:` in `dbt_project.yml` as **key-value pairs**:
+
+```yaml
+vars:
+  minimum_amount: 100
+  start_date: '2026-01-01'
+```
+
+Here:
+
+* `minimum_amount` → key
+* `100` → value
+* `start_date` → key
+* `'2026-01-01'` → value
+
+We use the **key** with `var()` to retrieve its corresponding value:
+
+```jinja
+{{ var('minimum_amount') }}
+```
+
+This returns:
+
+```text
+100
+```
+
+For example:
+
+```sql
+select *
+from {{ ref('stg__orders') }}
+where amount > {{ var('minimum_amount') }}
+```
+
+#### Overriding a Variable from the Command Line
+
+A project variable can be supplied or overridden for a dbt command using `--vars`:
+
+```bash
+dbt run --vars '{"minimum_amount": 200}'
+```
+
+The values passed through `--vars` are also provided as **key-value pairs**.
+
+In this example:
+
+* `minimum_amount` → key
+* `200` → value
+
+For this command:
+
+```jinja
+{{ var('minimum_amount') }}
+```
+
+returns `200` instead of the value defined in `dbt_project.yml`.
+
+This allows us to change configuration **without changing the model code**.
+
+#### Providing a Default Value
+
+`var()` can also provide a default value:
+
+```jinja
+{{ var('minimum_amount', 100) }}
+```
+
+This means:
+
+* If `minimum_amount` is provided → use its value
+* If it is not provided → use `100`
+
+####
+---
+
+### `env_var()`
+
+`env_var()` is a dbt Jinja function used to **access environment variables** from the environment where dbt is running.
+
+Environment variables allow values to be provided from **outside the dbt project**, rather than hard-coding them in project files.
+
+Basic syntax:
+
+```jinja
+{{ env_var('VARIABLE_NAME') }}
+```
+
+For sensitive values such as credentials, dbt supports environment variables prefixed with:
+
+```text
+DBT_ENV_SECRET_
+```
+
+For example:
+
+```text
+DBT_ENV_SECRET_USER
+DBT_ENV_SECRET_PASSWORD
+```
+
+We can access them using:
+
+```jinja
+{{ env_var('DBT_ENV_SECRET_USER') }}
+{{ env_var('DBT_ENV_SECRET_PASSWORD') }}
+```
+
+#### Providing a Default Value
+
+`env_var()` can also accept a default value:
+
+```jinja
+{{ env_var('DBT_ENV_SECRET', 'dev') }}
+```
+
+This means:
+
+- If `DBT_ENV_SECRET` exists → use its value
+- If `DBT_ENV_SECRET` does not exist → use `dev`
+
+Defaults are generally more appropriate for **non-sensitive configuration** than for credentials.
+
+#### Common Use: `profiles.yml`
+
+Environment variables are commonly used in `profiles.yml` to avoid hard-coding credentials.
+
+For example:
+
+```yaml
+my_project:
+  target: dev
+
+  outputs:
+    dev:
+      type: snowflake
+      account: "{{ env_var('DBT_ACCOUNT') }}"
+      user: "{{ env_var('DBT_ENV_SECRET_USER') }}"
+      password: "{{ env_var('DBT_ENV_SECRET_PASSWORD') }}"
+      database: analytics
+      schema: dbt_dev
+```
+
+The actual credential values are stored outside `profiles.yml` and retrieved when dbt runs.
+
+This prevents sensitive credentials from being hard-coded and potentially committed to Git.
+
+#### Using Environment Variables in CI/CD
+
+When dbt runs locally, environment variables can be defined in the **local operating system environment**, such as Windows or WSL.
+
+When dbt runs through **GitHub Actions**, credentials should normally be stored in **GitHub Secrets**, not in local Windows environment variables and not directly in the Git repository.
+
+For example, a GitHub Secret could be created as:
+
+```text
+DBT_ENV_SECRET_PASSWORD
+```
+
+The GitHub Actions workflow exposes the secret to the runner as an environment variable:
+
+```yaml
+env:
+  DBT_ENV_SECRET_PASSWORD: ${{ secrets.DBT_ENV_SECRET_PASSWORD }}
+```
+
+Then dbt can access it through `profiles.yml`:
+
+```yaml
+password: "{{ env_var('DBT_ENV_SECRET_PASSWORD') }}"
+```
+
+The flow is:
+
+```text
+GitHub Secret
+      ↓
+GitHub Actions environment variable
+      ↓
+env_var()
+      ↓
+profiles.yml
+      ↓
+dbt connection
+```
+
+Therefore:
+
+- **Local dbt run** → local OS environment variable → `env_var()`
+- **GitHub Actions CI/CD** → GitHub Secret → runner environment variable → `env_var()`
+
+> **Important:** GitHub Secrets may be configured for a repository or GitHub environment, but the secret value is **not stored in the Git repository or committed with the code**.
+
+#### `var()` vs `env_var()`
+
+Both functions retrieve values, but from different places:
+
+- `var()` → retrieves a **dbt project variable**
+- `env_var()` → retrieves an **environment variable from the environment where dbt is running**
+
+> **Key Idea:** `var()` is for **dbt project configuration**, while `env_var()` is for values supplied by the **external runtime environment**. For sensitive values such as credentials, use the `DBT_ENV_SECRET_` prefix and keep the actual secret outside the dbt repository.
 
 ---
 ## 🔹 Summary
