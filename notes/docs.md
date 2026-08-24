@@ -1,5 +1,4 @@
-
-       # 🔵 dbt Documentation — Quick Notes
+ ## 🔵 dbt Documentation — Quick Notes
 
 ## 🔹 What is dbt Documentation?
 
