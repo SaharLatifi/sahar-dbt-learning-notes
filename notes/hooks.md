@@ -354,7 +354,45 @@ Create `macros/log_airbnb_results.sql`:
 
 {% endmacro %}
 ```
+### ***`execute` and dbt's two passes*** ###
 
+dbt processes a project in two passes: a **parse pass**, where it just builds the dependency graph without running any SQL, and an **execute pass**, where SQL actually runs against the warehouse.  
+
+The Jinja variable `execute` is `True` only during the real execute pass. This matters because things like the `results` variable don't exist yet during parsing — referencing them without a guard would error out.   
+
+Wrapping logic in `{% if execute %}` ensures it only runs when dbt is actually executing, not just parsing.
+
+### ***`results | length > 0`*** ###
+
+`results` is a list of run-result objects (one per model/test/seed that ran), available in `on-run-end`.  
+
+`on-run-end` doesn't give you one value — it gives you `results`, a **list**, with one run-result object per node that executed (each model, test, seed, snapshot, etc. in that invocation). If you ran 10 models and 5 tests, `results` has 15 items in it.
+
+Each item in that list is an object with its own attributes — things like `result.node.unique_id`, `result.node.name`, `result.node.resource_type`, `result.status`, and `result.execution_time`. There's no single "the status" or "the execution time" for the whole run — each node has its own.
+
+So to log one row per node we have to **loop over `results`** and issue one `insert` per item:
+
+### ***`Invocation vs. Node`*** ###
+
+An **invocation** is one single execution of a dbt command (e.g. one `dbt run`). No matter how many models, tests, or seeds it touches, there's only one invocation — and dbt gives it one `invocation_id` and one `run_started_at`, both available as global Jinja variables anywhere in that run.
+
+A **node** is a single object in the DAG — one model, test, seed, snapshot, etc. Each node has its own identity (`unique_id`, `name`, `resource_type`) and its own outcome when it runs (`status`, `execution_time`), accessed through the `result` object in `on-run-end`.
+
+**Relationship:** one invocation contains many nodes. If `dbt run` builds 5 models, that's 1 invocation with 5 node executions. In a log table, this means every row from that run shares the same `invocation_id`, but each row has a different `node_unique_id` — because `invocation_id`/`run_started_at` describe the *run as a whole*, while `node_unique_id`/`status`/`execution_time` describe *that specific model or test's* individual result within the run. This is why logging results requires looping over `results` (one row per node) while reusing the same invocation-level values on every row.
+
+```sql
+{% for result in results %}
+  insert into ... values ('{{ result.node.unique_id }}', '{{ result.status }}', {{ result.execution_time }}, ...)
+{% endfor %}
+```
+
+Without the loop, you'd only ever be able to reference `results` as a whole list — you couldn't pull out `.status` or `.execution_time` directly from it, since those only exist on the individual items *inside* the list, not on the list itself.
+
+The `|` is Jinja's **filter syntax** — it pipes the value on the left into the filter on the right, so `results | length` means "count the items in `results`," similar to `length(results)` in a normal function call.  
+
+`> 0` then checks that count is greater than zero, i.e. something actually ran. Combined as `{% if execute and results | length > 0 %}`, it means: *only run this logic during a real execution, and only if there are actual results to log.*  
+
+Note this is slightly redundant with just `{% if execute and results %}`, since an empty list is already false in Jinja — but the explicit `| length > 0` is more self-documenting.
 `results` is available in the `on-run-end` context and contains one result object for every resource executed during the dbt invocation.
 
 #### Step 3: Call the Macros from `dbt_project.yml`
