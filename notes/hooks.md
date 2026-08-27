@@ -34,7 +34,7 @@ Hooks can be used to:
 
 There are two main categories of dbt lifecycle hooks, plus the related `run-operation` command:
 
-1. **Pre-hooks and post-hooks**
+1. **`Pre-hooks` and `post-hooks`**
 2. **`on-run-start` and `on-run-end` hooks**
 3. **`dbt run-operation`** — related to hooks, but technically a separate command
 
@@ -211,7 +211,6 @@ models:
 
 > **Airbnb project note:** The Airbnb project uses Snowflake. Do not use the `transaction` hook configuration with Snowflake. It is intended for adapters where dbt supports transactional hook behavior, particularly PostgreSQL and Redshift. The Airbnb examples above demonstrate the syntax, but this transaction setting should not be applied to the Snowflake project itself.
 
-Therefore, when designing hooks for the Airbnb project, do not assume that a Snowflake model and its hooks will be rolled back together as one transaction. Each hook should be safe to rerun, and audit logic should account for partial failures.
 
 ### Complete Hook Execution Order
 
