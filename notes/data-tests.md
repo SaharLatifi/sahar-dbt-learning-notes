@@ -184,7 +184,7 @@ where start_date > end_date
 {{ invalid_dates(ref('dim_customer')) }}
 ```
 
-### This approach keeps singular tests simple while reusing the SQL logic through macros.  
+### ***This approach keeps singular tests simple while reusing the SQL logic through macros.***  
 ---
 
 ## 🔹 Running Data Tests
@@ -348,7 +348,7 @@ For example:
 1–10 failures → Warning
 More than 10 failures → Error
 
-This allows a small number of data quality issues to generate a warning while larger numbers of failures are treated as errors.
+### ***This allows a small number of data quality issues to generate a warning while larger numbers of failures are treated as errors.***
 ---
 
 # 🔹 View Test Result
