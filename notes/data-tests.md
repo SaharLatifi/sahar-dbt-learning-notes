@@ -300,11 +300,25 @@ columns:
           config:
             severity: warn
 ```
-Possible values:
 
-error
-warn
-Error If
+- **Test a Subset of Data with `where`**
+
+Use `where` to test only relevant records.
+
+```yaml
+columns:
+  - name: listing_id
+    data_tests:
+      - unique:
+          config:
+            where: "updated_at = current_date"
+```
+
+This test checks only records updated today.
+
+> **Important:** Using `where` reduces the amount of data scanned and helps optimize compute costs.
+
+
 
 - **error_if** defines the condition that determines when the number of failing records should result in an error.
 ```yaml
