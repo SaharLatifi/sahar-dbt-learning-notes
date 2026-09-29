@@ -1,32 +1,40 @@
-# dbt Incremental Models — Learning Note
+# 🟢 dbt Incremental Models — Quick Notes
 
-## 1. What Is an Incremental Model?
+## 🔹 What Is an Incremental Model?
 
 An incremental model is a dbt model that does not rebuild the entire target table every time it runs.
 
-- On the first run, dbt creates and loads the entire table.
-- On subsequent runs, dbt processes only the records that meet the incremental filter.
-- Depending on the incremental strategy, dbt can append new rows, update existing rows, or do both.
+* On the first run, dbt creates and loads the entire table.
+* On subsequent runs, dbt processes only the records that meet the incremental filter.
+* Depending on the incremental strategy, dbt can append new rows, update existing rows, or do both.
 
 The main idea is:
 
 > Keep the existing table and process only the data that needs to be added or changed.
 
-## 2. Why Use an Incremental Model?
+---
 
-The main reason to use an incremental model is performance and scalability.
+## 🔹 Why Use an Incremental Model?
 
-If a table has 100 million rows and only 10,000 new or changed records arrive, rebuilding all 100 million rows every time is inefficient. An incremental model allows the pipeline to process only the relevant portion of the data.
+The main reason to use an incremental model is **performance and scalability**.
+
+If a table has 100 million rows and only 10,000 new or changed records arrive, rebuilding all 100 million rows every time is inefficient.
+
+An incremental model allows the pipeline to process only the relevant portion of the source data.
 
 ### Benefits
 
-- Reduces processing time
-- Reduces warehouse compute usage
-- Reduces unnecessary data movement
-- Makes pipelines more scalable as data grows
-- Allows frequent refreshes without rebuilding large tables
+* Reduces processing time
+* Reduces warehouse compute usage
+* Reduces unnecessary data movement
+* Makes pipelines more scalable as data grows
+* Allows frequent refreshes without rebuilding large tables
 
-## 3. Basic Incremental Configuration
+---
+
+## 🔹 Basic Incremental Configuration
+
+The basic configuration is:
 
 ```sql
 {{ config(
@@ -49,16 +57,26 @@ Tells dbt that the model should be built incrementally instead of recreating the
 
 ### `unique_key`
 
-Identifies the record that should be considered unique. It is especially important for strategies such as `merge`.
+Identifies the record that should be considered unique.
 
-## 4. First Run vs. Subsequent Runs
+It is especially important for strategies such as `merge`, where dbt needs to determine whether an incoming record matches an existing record.
+
+---
+
+## 🔹 First Run vs. Subsequent Runs
 
 ### First Run
 
 On the first run, there is no existing target table, so the full dataset is processed.
 
 ```text
-Source → All records → Incremental model → Target table created
+Source
+   ↓
+All records
+   ↓
+Incremental model
+   ↓
+Target table created
 ```
 
 ### Subsequent Runs
@@ -66,10 +84,18 @@ Source → All records → Incremental model → Target table created
 On later runs, the incremental logic determines which records need to be processed.
 
 ```text
-Source → Incremental filter → New/changed records → Existing target table
+Source
+   ↓
+Incremental filter
+   ↓
+New/changed records
+   ↓
+Existing target table
 ```
 
-## 5. `is_incremental()`
+---
+
+## 🔹 `is_incremental()`
 
 The most important dbt function for controlling incremental logic is:
 
@@ -83,32 +109,49 @@ Example:
 
 ```sql
 SELECT *
+
 FROM {{ ref('stg_matches') }}
 
 {% if is_incremental() %}
+
 WHERE start_time > (
+
     SELECT MAX(start_time)
+
     FROM {{ this }}
+
 )
+
 {% endif %}
 ```
 
-On the first run, `is_incremental()` is false, so the filter is not applied. On subsequent runs, it is true and the filter is applied.
+On the first run, `is_incremental()` is false, so the filter is not applied.
 
-## 6. `{{ this }}`
+On subsequent runs, it is true and the filter is applied.
 
-`{{ this }}` refers to the current dbt model's target relation.
+---
+
+## 🔹 `{{ this }}`
+
+`{{ this }}` refers to the current dbt model's **target relation**.
 
 For example:
 
 ```sql
 SELECT MAX(start_time)
+
 FROM {{ this }}
 ```
 
-means to look at the existing target table for this model and find the latest `start_time`.
+This means:
 
-## 7. Limiting the Data in an Incremental Model
+> Look at the existing target table for this model and find the latest `start_time`.
+
+`{{ this }}` is particularly useful when the incremental filter needs to compare incoming source data with data that already exists in the target table.
+
+---
+
+## 🔹 Limiting the Data in an Incremental Model
 
 The incremental filter determines how much data is processed during each incremental run.
 
@@ -116,26 +159,41 @@ Example:
 
 ```sql
 {% if is_incremental() %}
+
 WHERE start_time > (
+
     SELECT MAX(start_time)
+
     FROM {{ this }}
+
 )
+
 {% endif %}
 ```
 
-This processes records newer than the latest record already stored.
+This processes records newer than the latest record already stored in the target.
 
-Another approach is a fixed lookback window:
+### Lookback Window
+
+Another approach is to use a fixed lookback window:
 
 ```sql
 {% if is_incremental() %}
+
 WHERE start_time >= DATEADD(day, -3, CURRENT_DATE)
+
 {% endif %}
 ```
 
-A lookback window can help handle late-arriving or corrected records.
+A lookback window can help handle **late-arriving or corrected records**.
 
-## 8. Choosing the Incremental Filter
+Instead of processing only records after the latest timestamp, the model reprocesses a recent period.
+
+> **Important:** The incremental filter is what limits the amount of source data processed during an incremental run. Simply setting `materialized='incremental'` does not automatically determine which source records should be selected.
+
+---
+
+## 🔹 Choosing the Incremental Filter
 
 The filter should be based on how the source data behaves.
 
@@ -143,14 +201,17 @@ The filter should be based on how the source data behaves.
 
 ```sql
 WHERE updated_at > (
+
     SELECT MAX(updated_at)
+
     FROM {{ this }}
+
 )
 ```
 
 Useful when the source has a reliable `updated_at` column.
 
-### Date-based lookback
+### Date-based Lookback
 
 ```sql
 WHERE event_date >= DATEADD(day, -3, CURRENT_DATE)
@@ -162,8 +223,11 @@ Useful when late-arriving data is possible.
 
 ```sql
 WHERE id > (
+
     SELECT MAX(id)
+
     FROM {{ this }}
+
 )
 ```
 
@@ -173,35 +237,43 @@ The important question is:
 
 > How can I reliably identify data that is new or has changed?
 
-## 9. Incremental Strategies
+---
 
-The incremental strategy determines how dbt applies the selected records to the target table.
+## 🔹 Incremental Strategies
+
+The incremental strategy determines **how dbt applies the selected records to the target table**.
 
 Common strategies include:
 
-- Append
-- Merge
-- Delete + Insert
-- Insert Overwrite
-- Microbatch
+* `append`
+* `merge`
+* `delete+insert`
+* `insert_overwrite`
+* `microbatch`
 
 The exact strategies available depend on the database adapter and configuration.
 
-## 10. Append Strategy
+---
 
-The append approach adds new rows to the existing table.
+## 🔹 Append Strategy
+
+The `append` approach adds new rows to the existing table.
 
 It is appropriate when:
 
-- Records are immutable
-- Existing records do not need updates
-- The source only produces new records
+* Records are immutable
+* Existing records do not need updates
+* The source only produces new records
 
 A key limitation is that append does not automatically update an existing record.
 
-## 11. Merge Strategy
+---
 
-The `merge` strategy can both update existing records and insert new records. It typically relies on a `unique_key`.
+## 🔹 Merge Strategy
+
+The `merge` strategy can both **update existing records and insert new records**.
+
+It typically relies on a `unique_key`.
 
 Example:
 
@@ -220,41 +292,56 @@ Incoming record
       ↓
 Does the unique key already exist?
       ↓
- Yes → UPDATE
- No  → INSERT
+ ┌────┴────┐
+ ↓         ↓
+Yes       No
+ ↓         ↓
+UPDATE    INSERT
 ```
 
-## 12. Delete + Insert
+---
 
-The delete + insert approach generally:
+## 🔹 Delete + Insert
 
-1. Identifies matching existing records
-2. Deletes them
-3. Inserts the incoming records
+The `delete+insert` approach generally:
 
-This can be useful when records need to be replaced rather than updated column by column.
+1. Identifies matching existing records.
+2. Deletes them.
+3. Inserts the incoming records.
 
-## 13. Insert Overwrite
+This can be useful when records need to be **replaced rather than updated column by column**.
 
-Insert overwrite replaces data in a defined portion of the target table, commonly a partition.
+---
+
+## 🔹 Insert Overwrite
+
+The `insert_overwrite` strategy replaces data in a defined portion of the target table, commonly a partition.
 
 For example, if data is partitioned by date, the affected partition can be replaced instead of rebuilding the entire table.
 
-## 14. Microbatch
+This can be useful for large partitioned datasets where specific partitions need to be refreshed.
+
+---
+
+## 🔹 Microbatch
 
 Microbatch processing divides incremental data into smaller batches, often based on time intervals.
 
 ```text
 Large incremental range
+
         ↓
- ┌──────┬──────┬──────┬──────┐
- │Batch1│Batch2│Batch3│Batch4│
- └──────┴──────┴──────┴──────┘
+
+┌──────┬──────┬──────┬──────┐
+│Batch1│Batch2│Batch3│Batch4│
+└──────┴──────┴──────┴──────┘
 ```
 
-This can be useful for very large time-series datasets.
+This can be useful for very large time-series datasets where processing one large incremental range at once may be inefficient.
 
-## 15. Incremental Models and `unique_key`
+---
+
+## 🔹 Incremental Models and `unique_key`
 
 `unique_key` is especially important when records can change.
 
@@ -267,9 +354,21 @@ For example:
 ) }}
 ```
 
-The key should represent the grain of the model. If the model grain is one row per player per match, for example, `player_id` alone would not be a sufficient unique key.
+The key should represent the **grain of the model**.
 
-## 16. Incremental Models for Facts and Dimensions
+If the model grain is one row per player per match, for example, `player_id` alone would not be a sufficient unique key.
+
+A composite key may be required instead, such as:
+
+```text
+player_id + match_id
+```
+
+> **Important:** The `unique_key` should identify one logical record at the model's defined grain.
+
+---
+
+## 🔹 Incremental Models for Facts and Dimensions
 
 Incremental models are commonly useful for large fact tables because fact tables can grow quickly.
 
@@ -292,33 +391,45 @@ dim_team
 dim_customer
 ```
 
-If dimension attributes can change, a merge strategy or another appropriate update pattern may be required.
+If dimension attributes can change, a `merge` strategy or another appropriate update pattern may be required.
 
-## 17. Full Refresh
+---
+
+## 🔹 Full Refresh
 
 An incremental model can still be rebuilt completely with a full refresh.
 
-Normal run:
+### Normal Run
 
 ```text
-Existing table + New/changed data → Incremental update
+Existing table + New/changed data
+                ↓
+        Incremental update
 ```
 
-Full refresh:
+### Full Refresh
 
 ```text
-Source → Rebuild → Complete target table
+Source
+  ↓
+Rebuild
+  ↓
+Complete target table
 ```
 
 A full refresh can be useful when:
 
-- The model logic changes significantly
-- Historical data needs to be corrected
-- The incremental logic has changed
-- The target table needs to be rebuilt
-- The incremental process has produced incorrect results
+* The model logic changes significantly
+* Historical data needs to be corrected
+* The incremental logic has changed
+* The target table needs to be rebuilt
+* The incremental process has produced incorrect results
 
-## 18. Common Incremental Model Pattern
+> **Full refresh is an important recovery and maintenance option for incremental models.**
+
+---
+
+## 🔹 Common Incremental Model Pattern
 
 ```sql
 {{ config(
@@ -334,6 +445,7 @@ WITH source_data AS (
         start_time,
         game_mode,
         region
+
     FROM {{ ref('stg_matches') }}
 
     {% if is_incremental() %}
@@ -349,6 +461,7 @@ WITH source_data AS (
 )
 
 SELECT *
+
 FROM source_data
 ```
 
@@ -376,9 +489,11 @@ incremental_strategy
 Determine how records are applied to the target
 ```
 
-## 19. Common Mistakes
+---
 
-### Mistake 1: Assuming incremental materialization automatically filters the source
+## 🔹 Common Mistakes
+
+### Mistake 1: Assuming Incremental Materialization Automatically Filters the Source
 
 Setting:
 
@@ -386,50 +501,77 @@ Setting:
 materialized='incremental'
 ```
 
-does not automatically mean that only new records are selected. You still need to define the incremental filtering logic when your model requires it.
+does not automatically mean that only new records are selected.
 
-### Mistake 2: Using the wrong `unique_key`
+You still need to define the incremental filtering logic when your model requires it.
+
+---
+
+### Mistake 2: Using the Wrong `unique_key`
 
 The `unique_key` must match the actual grain of the model.
 
 If the model has one row per player per match, using only `player_id` as the unique key would incorrectly identify multiple records as the same record.
 
-### Mistake 3: Using `>` without considering late-arriving data
+---
+
+### Mistake 3: Using `>` Without Considering Late-arriving Data
 
 A filter such as:
 
 ```sql
-WHERE updated_at > (SELECT MAX(updated_at) FROM {{ this }})
+WHERE updated_at > (
+    SELECT MAX(updated_at)
+    FROM {{ this }}
+)
 ```
 
 can miss records that arrive late or have timestamps that fall within an already-processed period.
 
 A lookback window can help address this situation.
 
-### Mistake 4: Forgetting that incremental models depend on existing state
+For example:
 
-Incremental behavior depends on the existing target table. Test both:
+```sql
+WHERE updated_at >= DATEADD(
+    day,
+    -3,
+    CURRENT_DATE
+)
+```
 
-- A full-refresh run
-- A normal incremental run
+---
+
+### Mistake 4: Forgetting That Incremental Models Depend on Existing State
+
+Incremental behavior depends on the existing target table.
+
+Test both:
+
+* A full-refresh run
+* A normal incremental run
 
 This helps verify that the model works correctly when the target table is first created and when it already contains data.
 
-## 20. Practical Mental Model
+---
 
-Think about an incremental model as three separate decisions:
+## 🔹 Practical Mental Model
 
-### 1. What data should I process?
+Think about an incremental model as **three separate decisions**.
+
+### 1. What Data Should I Process?
 
 Controlled by the incremental filter:
 
 ```sql
 {% if is_incremental() %}
+
 ...
+
 {% endif %}
 ```
 
-### 2. How do I identify the record?
+### 2. How Do I Identify the Record?
 
 Controlled by:
 
@@ -437,7 +579,7 @@ Controlled by:
 unique_key
 ```
 
-### 3. How should the record be applied?
+### 3. How Should the Record Be Applied?
 
 Controlled by:
 
@@ -455,24 +597,38 @@ So:
      What data?     Which row?    How apply?
           │             │             │
    is_incremental   unique_key   strategy
-                                  │
-                         append / merge /
-                         delete+insert /
-                         insert overwrite /
-                         microbatch
+                                      │
+                            append / merge /
+                            delete+insert /
+                            insert overwrite /
+                            microbatch
 ```
 
-## 21. Key Takeaways
+### The Three Questions
 
-- An incremental model avoids rebuilding the entire target table on every run.
-- The first run normally processes the full dataset.
-- Later runs process only the data selected by the incremental logic.
-- `is_incremental()` lets you apply different logic on incremental runs.
-- `{{ this }}` refers to the current target table.
-- The incremental filter controls which source records are processed.
-- A lookback window can help handle late-arriving or corrected data.
-- `unique_key` identifies records when updates are required.
-- The incremental strategy determines how selected records are written to the target.
-- `merge` is useful when existing records can change.
-- `append` is useful when records are immutable and only new rows arrive.
-- Full refresh remains available when the entire model needs to be rebuilt.
+When designing an incremental model, ask:
+
+1. **What data needs to be processed?**
+2. **How do I identify each logical record?**
+3. **How should those records be applied to the target?**
+
+***These three decisions form the core of incremental model design.***
+
+---
+
+# 🔹 Summary
+
+* 🚀 Incremental models avoid rebuilding the entire target table on every run.
+* 🆕 The first run normally processes the full dataset.
+* 🔄 Later runs process only the data selected by the incremental logic.
+* ⚙️ `is_incremental()` lets you apply different logic on incremental runs.
+* 🎯 `{{ this }}` refers to the current target relation.
+* 🔍 The incremental filter controls which source records are processed.
+* 📅 A lookback window can help handle late-arriving or corrected data.
+* 🔑 `unique_key` identifies records when updates are required.
+* 🔨 `incremental_strategy` determines how selected records are written to the target.
+* ➕ `append` is useful when records are immutable and only new rows arrive.
+* 🔄 `merge` is useful when existing records can change.
+* 🧩 The `unique_key` should match the grain of the model.
+* ♻️ Full refresh remains available when the entire model needs to be rebuilt.
+* 🧠 The core mental model is: **What data? Which row? How apply?**
