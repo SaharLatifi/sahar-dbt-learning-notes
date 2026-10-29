@@ -537,26 +537,28 @@ Best practices:
 
    Source tests can often use `severity: warn` when an upstream issue should be surfaced without blocking the pipeline. Warnings can then be communicated to the upstream data owner while allowing downstream processing to continue when appropriate.
 
-5. **Test important business keys**
+   -> The rule of thumb is to test a column at the earliest point where its values are final. If staging doesn't change them then the point is source.
+
+6. **Test important business keys**
    Primary and business keys should have appropriate tests. In most cases:
 
    * Use both `unique` and `not_null` for primary keys
    * Use `relationships` to validate foreign-key relationships
    * Use `accepted_values` for controlled categories, statuses, and lookup values
 
-6. **Keep tests focused and meaningful**
+7. **Keep tests focused and meaningful**
    Each test should validate a clear data quality expectation and provide useful information when it fails. Avoid adding tests simply to increase test count. It has costs.
 
-7. **Use failure thresholds when appropriate**
+8. **Use failure thresholds when appropriate**
    Use `warn_if` and `error_if` when a small number of failures can be tolerated but larger numbers should cause the pipeline to fail.
 
-8. **Store failed records when troubleshooting**
+9. **Store failed records when troubleshooting**
    Use `store_failures` when the actual failing records need to be investigated. Stored failures are useful for debugging but should not be treated as a historical data quality monitoring solution.
 
-9. **Limit the test scope when appropriate**
+10. **Limit the test scope when appropriate**
    Use the `where` configuration to test only relevant subsets of large datasets when full-table testing is unnecessary. This can reduce execution time and warehouse compute costs.
 
-10. **Run tests as part of deployment and CI workflows**
+11. **Run tests as part of deployment and CI workflows**
     Tests should run regularly and be integrated into the development and deployment process so data quality issues are detected before changes reach downstream consumers.
 
 
