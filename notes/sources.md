@@ -170,7 +170,28 @@ sources:
 
    -> Link to dbt documentation:    
     https://docs.getdbt.com/reference/source-properties?version=2.0&name=v2
+---
+## Common Commands to run the data tests:
 
+#### Run all source tests across the entire project
+```bash
+dbt test --select source:*
+```
+
+#### Run tests for all tables within a specific source
+```bash
+dbt test --select source:source_name
+```
+
+#### Run tests for a single table in a specific source
+```bash
+dbt test --select source:source_name.table_name
+```
+
+#### Run source tests alongside source freshness checks
+```bash
+dbt source freshness && dbt test --select source:*
+```
 --- 
 ### Benefits
 - Reusability: Define in a central location, reuse across multiple models.
