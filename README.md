@@ -20,6 +20,7 @@ This is not a production project but a knowledge base + playground.
 - [Seeds](notes/seeds.md)  
 - [Variables](notes/variables.md)  
 - [Packages](notes/packages.md) 
+- [Contracts & Exposures](notes/contracts-and-exposures.md)  
 - [Performance](notes/performance.md)  
 - [Best Practices](notes/best_practices.md)  
 - [CI/CD](notes/cicd.md)  
